@@ -1,0 +1,32 @@
+
+.pagina-contratos {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pagina-contratos h2 {
+  color: var(--azul-marinho);
+  font-weight: 700;
+}
+
+.pagina-contratos h5 {
+  color: var(--azul-marinho);
+  font-weight: 600;
+}
+
+.pagina-contratos .card {
+  border-radius: 14px;
+}
+
+.pagina-contratos .form-label {
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.pagina-contratos .contrato-item {
+  border-bottom: 1px solid #e9edf3;
+}
+
+.pagina-contratos .contrato-item:last-child {
+  border-bottom: none;
+}

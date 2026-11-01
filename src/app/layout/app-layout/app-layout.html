@@ -1,0 +1,87 @@
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="brand" routerLink="/inicio">
+      <span class="brand-icon"><i class="bi bi-buildings"></i></span>
+      <span>
+        <strong>Gestão de Aluguéis</strong>
+        <small>Controle imobiliário</small>
+      </span>
+    </a>
+
+    <div class="menu-label">MENU PRINCIPAL</div>
+
+    <nav class="nav flex-column gap-2">
+      <a class="nav-link" routerLink="/inicio" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <i class="bi bi-grid-1x2"></i>
+        <span>Dashboard</span>
+      </a>
+
+      <a class="nav-link" routerLink="/imoveis" routerLinkActive="active">
+        <i class="bi bi-buildings"></i>
+        <span>Imóveis</span>
+      </a>
+
+      <a class="nav-link" routerLink="/inquilinos" routerLinkActive="active">
+        <i class="bi bi-people"></i>
+        <span>Inquilinos</span>
+      </a>
+
+      <a class="nav-link" routerLink="/recibos/novo" routerLinkActive="active">
+        <i class="bi bi-receipt"></i>
+        <span>Registrar pagamento</span>
+      </a>
+
+      <a class="nav-link" routerLink="/contratos" routerLinkActive="active">
+        <i class="bi bi-file-earmark-text"></i>
+        <span>Contratos</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <i class="bi bi-shield-check"></i>
+      <span>Área de gestão</span>
+    </div>
+  </aside>
+
+  <main class="main-area">
+    <header class="topbar">
+      <div>
+        <div class="topbar-title">Gestão imobiliária</div>
+        <div class="topbar-subtitle">Acompanhe seus recebimentos</div>
+      </div>
+      <div class="user-avatar" title="Administrador">LA</div>
+    </header>
+
+    <section class="page-content">
+      <router-outlet></router-outlet>
+    </section>
+  </main>
+
+  <nav class="mobile-nav">
+    <a routerLink="/inicio" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+      <i class="bi bi-house-door"></i>
+      <span>Início</span>
+    </a>
+
+    <a routerLink="/imoveis" routerLinkActive="active">
+      <i class="bi bi-buildings"></i>
+      <span>Imóveis</span>
+    </a>
+
+    <a routerLink="/inquilinos" routerLinkActive="active">
+      <i class="bi bi-people"></i>
+      <span>Inquilinos</span>
+    </a>
+
+    <a routerLink="/recibos/novo" routerLinkActive="active">
+      <i class="bi bi-receipt"></i>
+      <span>Recibos</span>
+    </a>
+
+    <a routerLink="/contratos" routerLinkActive="active" class="nav-link">
+      <i class="bi bi-file-earmark-text me-2"></i>
+      Contratos
+    </a>
+
+  </nav>
+</div>

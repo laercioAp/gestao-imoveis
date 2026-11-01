@@ -1,0 +1,112 @@
+
+<div class="form-heading">
+  <a routerLink="/inicio" class="back-link">
+    <i class="bi bi-arrow-left"></i> Voltar ao dashboard
+  </a>
+  <h1>Registrar pagamento</h1>
+  <p>Confirme o recebimento e gere o recibo em PDF.</p>
+</div>
+
+<div class="receipt-layout">
+  <section class="form-card">
+    <div class="form-card-heading">
+      <span class="heading-icon"><i class="bi bi-receipt-cutoff"></i></span>
+      <div>
+        <h2>Dados do pagamento</h2>
+        <p>Preencha os campos abaixo.</p>
+      </div>
+    </div>
+
+    <div *ngIf="mensagemErro" class="alert alert-danger" role="alert">
+      {{ mensagemErro }}
+    </div>
+
+    <div *ngIf="alugueisPendentes.length === 0" class="alert alert-info">
+      Não há aluguéis pendentes para registrar.
+    </div>
+
+    <form (ngSubmit)="registrarPagamento()" #formPagamento="ngForm">
+      <div class="mb-4">
+        <label for="aluguel" class="form-label">Aluguel pendente</label>
+        <select
+          id="aluguel"
+          name="aluguel"
+          class="form-select"
+          [(ngModel)]="aluguelSelecionadoId"
+          required>
+          <option value="">Selecione um aluguel</option>
+          <option *ngFor="let aluguel of alugueisPendentes" [value]="aluguel.id">
+            {{ aluguel.imovel }} — {{ aluguel.inquilino }}
+            ({{ aluguel.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }})
+          </option>
+        </select>
+        <div class="form-text">Somente aluguéis ainda não pagos aparecem nesta lista.</div>
+      </div>
+
+      <div *ngIf="aluguelSelecionado" class="selected-rent">
+        <div class="selected-rent-label">Valor do aluguel</div>
+        <div class="selected-rent-value">
+          {{ aluguelSelecionado.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+        </div>
+        <div class="selected-rent-detail">
+          Competência: {{ aluguelSelecionado.competencia }}
+          · Vencimento: {{ formatarData(aluguelSelecionado.vencimento) }}
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label for="dataPagamento" class="form-label">Data do pagamento</label>
+        <input
+          id="dataPagamento"
+          name="dataPagamento"
+          type="date"
+          class="form-control"
+          [(ngModel)]="dataPagamento"
+          [max]="hojeLocal()"
+          required>
+      </div>
+
+      <div class="mb-4">
+        <label for="formaPagamento" class="form-label">Forma de pagamento</label>
+        <select
+          id="formaPagamento"
+          name="formaPagamento"
+          class="form-select"
+          [(ngModel)]="formaPagamento"
+          required>
+          <option value="PIX">PIX</option>
+          <option value="Transferência bancária">Transferência bancária</option>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="Boleto">Boleto</option>
+          <option value="Outro">Outro</option>
+        </select>
+      </div>
+
+      <div class="form-note">
+        <i class="bi bi-info-circle"></i>
+        Ao confirmar, o aluguel será marcado como pago e o recibo PDF será gerado.
+      </div>
+
+      <div class="form-actions">
+        <a routerLink="/inicio" class="btn btn-light">Cancelar</a>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="!formPagamento.valid || !alugueisPendentes.length">
+          <i class="bi bi-file-earmark-pdf me-2"></i>
+          Confirmar e gerar recibo
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <aside class="receipt-info">
+    <div class="info-icon"><i class="bi bi-file-earmark-pdf"></i></div>
+    <h3>Recibo em PDF</h3>
+    <p>O documento terá os dados do locador, imóvel, inquilino, competência, data e valor recebido.</p>
+    <div class="info-divider"></div>
+    <div class="info-line"><i class="bi bi-check-circle"></i> Identificação do pagamento</div>
+    <div class="info-line"><i class="bi bi-check-circle"></i> Valor e forma de pagamento</div>
+    <div class="info-line"><i class="bi bi-check-circle"></i> Número do recibo</div>
+  </aside>
+</div>

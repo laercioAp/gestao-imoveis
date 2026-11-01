@@ -1,0 +1,137 @@
+
+<div class="rent-dashboard">
+  <header class="dashboard-header">
+    <div>
+      <span class="eyebrow">PAINEL FINANCEIRO</span>
+      <h1>Meus aluguéis</h1>
+      <p class="month-label">
+        <i class="bi bi-calendar3"></i>
+        {{ mesAtual }}
+      </p>
+    </div>
+
+    <div class="header-building">
+      <i class="bi bi-buildings"></i>
+    </div>
+  </header>
+
+  <section class="summary-grid">
+    <article class="summary-card received-card">
+      <div class="summary-card-top">
+        <span>Recebido</span>
+        <span class="summary-icon">
+          <i class="bi bi-check-lg"></i>
+        </span>
+      </div>
+
+      <div class="summary-value">
+        {{ recebidos | currency:'BRL':'symbol':'1.0-0':'pt-BR' }}
+      </div>
+
+      <div class="summary-caption">
+        <span class="status-dot"></span>
+        Pagamentos confirmados
+      </div>
+    </article>
+
+    <article class="summary-card pending-card">
+      <div class="summary-card-top">
+        <span>Pendente</span>
+        <span class="summary-icon">
+          <i class="bi bi-clock"></i>
+        </span>
+      </div>
+
+      <div class="summary-value">
+        {{ pendentes | currency:'BRL':'symbol':'1.0-0':'pt-BR' }}
+      </div>
+
+      <div class="summary-caption">
+        <span class="status-dot"></span>
+        Aguardando pagamento
+      </div>
+    </article>
+  </section>
+
+  <section class="rent-section">
+    <div class="section-heading">
+      <div>
+        <h2>Situação dos aluguéis</h2>
+        <p>Acompanhe seus recebimentos</p>
+      </div>
+
+      <span class="rent-count">{{ alugueis.length }} contratos</span>
+    </div>
+
+    <article class="rent-item" *ngFor="let aluguel of alugueis">
+      <div class="rent-item-icon"
+        [class.apartment-icon]="aluguel.imovel.toLowerCase().includes('apartamento')"
+        [class.garage-icon]="aluguel.imovel.toLowerCase().includes('garagem')">
+        <i [class]="aluguel.imovel.toLowerCase().includes('garagem')
+          ? 'bi bi-car-front-fill'
+          : 'bi bi-house-door-fill'"></i>
+      </div>
+
+      <div class="rent-item-content">
+        <div class="rent-item-title">{{ aluguel.imovel.includes('Apartamento')
+          ? 'Apartamento' : aluguel.imovel.includes('garagem') || aluguel.imovel.includes('Garagem')
+          ? 'Vaga de garagem' : aluguel.imovel }}</div>
+
+        <div class="rent-item-subtitle">
+          Aluguel · {{ aluguel.competencia === '2026-10' ? 'Outubro' : aluguel.competencia }}
+        </div>
+
+        <div class="rent-item-value">
+          {{ aluguel.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+        </div>
+
+        <div *ngIf="aluguel.status === 'PAGO'" class="rent-detail paid-detail">
+          <i class="bi bi-file-earmark-check"></i>
+          Recibo disponível
+        </div>
+
+        <div *ngIf="aluguel.status === 'PENDENTE'" class="rent-detail">
+          Vencimento: {{ formatarData(aluguel.vencimento) }}
+        </div>
+
+        <div class="rent-item-actions">
+          <span class="status-badge"
+            [class.badge-paid]="aluguel.status === 'PAGO'"
+            [class.badge-overdue]="estaAtrasado(aluguel)"
+            [class.badge-pending]="aluguel.status === 'PENDENTE' && !estaAtrasado(aluguel)">
+            <span class="badge-dot"></span>
+            {{ getDescricaoStatus(aluguel) }}
+          </span>
+
+          <a *ngIf="aluguel.status === 'PENDENTE'"
+             class="register-link"
+             routerLink="/recibos/novo">
+            Registrar pagamento
+            <i class="bi bi-arrow-up-right"></i>
+          </a>
+
+          <a *ngIf="aluguel.status === 'PAGO'"
+             class="receipt-link"
+             routerLink="/recibos/novo">
+            <i class="bi bi-check-circle"></i>
+            Pago
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <div *ngIf="alugueis.length === 0" class="empty-state">
+      <i class="bi bi-house"></i>
+      <h3>Nenhum aluguel encontrado</h3>
+      <p>Os contratos desta competência aparecerão aqui.</p>
+    </div>
+  </section>
+
+  <footer class="demo-notice">
+    <i class="bi bi-info-circle"></i>
+    <span>
+      Prévia ilustrativa, com dados fictícios. Os valores reais virão do banco
+      quando integrarmos o backend.
+    </span>
+  </footer>
+</div>

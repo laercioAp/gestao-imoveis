@@ -1,0 +1,199 @@
+
+<div class="container-fluid pagina-contratos py-4">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <h2 class="mb-1">Contratos de locação</h2>
+      <p class="text-secondary mb-0">
+        Preencha os dados, gere o PDF e salve como rascunho ou ativo.
+      </p>
+    </div>
+    <span class="badge text-bg-light border">Modelo residencial</span>
+  </div>
+
+  <div *ngIf="mensagem" class="alert alert-info" role="status">
+    {{ mensagem }}
+  </div>
+
+  <form #formContrato="ngForm" (ngSubmit)="gerarPdf()">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+        <h5 class="mb-3">1. Dados do locador</h5>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Nome completo *</label>
+            <input class="form-control" name="locadorNome"
+              [(ngModel)]="dados.locadorNome" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">CPF *</label>
+            <input class="form-control" name="locadorCpf"
+              [(ngModel)]="dados.locadorCpf" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Endereço completo *</label>
+            <input class="form-control" name="locadorEndereco"
+              [(ngModel)]="dados.locadorEndereco" required>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+        <h5 class="mb-3">2. Dados do inquilino</h5>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Nome completo *</label>
+            <input class="form-control" name="inquilinoNome"
+              [(ngModel)]="dados.inquilinoNome" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">CPF *</label>
+            <input class="form-control" name="inquilinoCpf"
+              [(ngModel)]="dados.inquilinoCpf" required>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Endereço atual completo *</label>
+            <input class="form-control" name="inquilinoEndereco"
+              [(ngModel)]="dados.inquilinoEndereco" required>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+        <h5 class="mb-3">3. Dados do imóvel</h5>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Endereço completo do imóvel *</label>
+            <input class="form-control" name="imovelEndereco"
+              [(ngModel)]="dados.imovelEndereco" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Finalidade</label>
+            <select class="form-select" name="finalidade"
+              [(ngModel)]="dados.finalidade">
+              <option value="Residencial">Residencial</option>
+              <option value="Comercial">Comercial</option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Valor mensal do aluguel (R$) *</label>
+            <input class="form-control" type="number" min="0.01" step="0.01"
+              name="valorAluguel" [(ngModel)]="dados.valorAluguel" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Dia do vencimento *</label>
+            <input class="form-control" type="number" min="1" max="31"
+              name="diaVencimento" [(ngModel)]="dados.diaVencimento" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Início do contrato *</label>
+            <input class="form-control" type="date" name="dataInicio"
+              [(ngModel)]="dados.dataInicio" required>
+          </div>
+
+          <div class="col-md-4">
+            <label class="form-label">Fim do contrato *</label>
+            <input class="form-control" type="date" name="dataFim"
+              [(ngModel)]="dados.dataFim" required>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Índice de reajuste anual</label>
+            <select class="form-select" name="indiceReajuste"
+              [(ngModel)]="dados.indiceReajuste">
+              <option value="IPCA/IBGE">IPCA/IBGE</option>
+              <option value="IGP-M">IGP-M</option>
+              <option value="Outro índice legalmente aplicável">
+                Outro índice legalmente aplicável
+              </option>
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Valor da caução (R$)</label>
+            <input class="form-control" type="number" min="0" step="0.01"
+              name="valorCaucao" [(ngModel)]="dados.valorCaucao">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Observações adicionais</label>
+            <textarea class="form-control" rows="3" name="observacoes"
+              [(ngModel)]="dados.observacoes"
+              placeholder="Informações adicionais para constar no documento"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-5">
+      <button class="btn btn-primary" type="submit">
+        <i class="bi bi-file-earmark-pdf me-2"></i>
+        Gerar PDF
+      </button>
+
+      <button class="btn btn-outline-primary" type="button"
+        (click)="salvarRascunho()">
+        <i class="bi bi-save me-2"></i>
+        Salvar rascunho
+      </button>
+
+      <button class="btn btn-success" type="button"
+        (click)="ativarContrato()">
+        <i class="bi bi-check-circle me-2"></i>
+        Salvar como ativo
+      </button>
+    </div>
+  </form>
+
+  <div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+      <h5 class="mb-3">Contratos cadastrados</h5>
+
+      <div *ngIf="contratos.length === 0" class="text-secondary">
+        Nenhum contrato cadastrado ainda.
+      </div>
+
+      <div *ngFor="let contrato of contratos"
+        class="contrato-item d-flex justify-content-between align-items-start flex-wrap gap-3 py-3">
+        <div>
+          <strong>{{ contrato.inquilinoNome }}</strong>
+          <div class="text-secondary">{{ contrato.imovelEndereco }}</div>
+          <div>
+            {{ contrato.valorAluguel | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+            · Vencimento dia {{ contrato.diaVencimento }}
+          </div>
+          <small class="text-secondary">
+            {{ contrato.dataInicio | date:'dd/MM/yyyy' }} até
+            {{ contrato.dataFim | date:'dd/MM/yyyy' }}
+          </small>
+          <div class="mt-2">
+            <span class="badge"
+              [class.text-bg-success]="contrato.status === 'ATIVO'"
+              [class.text-bg-secondary]="contrato.status === 'RASCUNHO'">
+              {{ contrato.status }}
+            </span>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-sm btn-outline-danger"
+          (click)="excluir(contrato.id)">
+          <i class="bi bi-trash me-1"></i> Excluir
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,43 @@
+
+:root {
+  --azul-marinho: #20365b;
+  --azul-hover: #172947;
+  --fundo: #f4f6fa;
+  --texto: #253047;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 14px;
+}
+
+.btn-primary {
+  --bs-btn-bg: var(--azul-marinho);
+  --bs-btn-border-color: var(--azul-marinho);
+  --bs-btn-hover-bg: var(--azul-hover);
+  --bs-btn-hover-border-color: var(--azul-hover);
+  --bs-btn-active-bg: var(--azul-hover);
+  --bs-btn-active-border-color: var(--azul-hover);
+}
+
+.form-control,
+.form-select {
+  min-height: 46px;
+}
+
+.card {
+  border-radius: 14px;
+}
+
+a,
+button {
+  -webkit-tap-highlight-color: transparent;
+}

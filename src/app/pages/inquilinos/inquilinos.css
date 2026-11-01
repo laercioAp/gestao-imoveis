@@ -1,0 +1,116 @@
+
+.page-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.page-heading h1 {
+  color: #20365b;
+  font-size: 25px;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+
+.page-heading p, .tenant-info span {
+  color: #77839a;
+  font-size: 13px;
+  margin: 0;
+}
+
+.form-card, .list-card {
+  border: 1px solid #e8ecf3;
+  border-radius: 14px;
+}
+
+.section-title {
+  color: #20365b;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 20px;
+}
+
+.tenant-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 0;
+  border-top: 1px solid #edf0f5;
+}
+
+.tenant-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #e8edf6;
+  color: #20365b;
+  font-size: 21px;
+}
+
+.tenant-info {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tenant-info strong {
+  color: #20365b;
+}
+
+.tenant-info span {
+  overflow-wrap: anywhere;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 35px 12px;
+  color: #77839a;
+}
+
+.empty-state i {
+  display: block;
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+@media (max-width: 575px) {
+  .page-heading {
+    align-items: flex-start;
+  }
+
+  .page-heading h1 {
+    font-size: 22px;
+  }
+
+  .page-heading .btn {
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  .tenant-row {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .tenant-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 18px;
+  }
+
+  .tenant-info strong {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  .tenant-row > .btn {
+    flex-shrink: 0;
+  }
+}

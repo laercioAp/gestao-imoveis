@@ -1,0 +1,235 @@
+
+.form-heading {
+  margin-bottom: 24px;
+}
+
+.back-link {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: #52627b;
+  text-decoration: none;
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+
+.back-link:hover {
+  color: #20365b;
+}
+
+.form-heading h1 {
+  color: #20365b;
+  font-size: 26px;
+  font-weight: 750;
+  margin-bottom: 7px;
+}
+
+.form-heading p {
+  color: #7b8799;
+  font-size: 13px;
+}
+
+.receipt-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 22px;
+  align-items: start;
+}
+
+.form-card,
+.receipt-info {
+  background: #fff;
+  border: 1px solid #e8ecf3;
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: 0 3px 12px rgb(31 48 77 / 3%);
+}
+
+.form-card-heading {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding-bottom: 23px;
+  margin-bottom: 25px;
+  border-bottom: 1px solid #edf0f5;
+}
+
+.heading-icon,
+.info-icon {
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: #eaf0f9;
+  color: #20365b;
+  font-size: 21px;
+}
+
+.form-card-heading h2 {
+  color: #20365b;
+  font-size: 16px;
+  font-weight: 750;
+  margin: 0 0 5px;
+}
+
+.form-card-heading p {
+  color: #7b8799;
+  font-size: 12px;
+  margin: 0;
+}
+
+.form-label {
+  color: #34425a;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 9px;
+}
+
+.form-control,
+.form-select {
+  border-color: #dfe5ee;
+  border-radius: 9px;
+  font-size: 13px;
+  min-height: 46px;
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: #7088b1;
+  box-shadow: 0 0 0 3px rgb(32 54 91 / 9%);
+}
+
+.form-text {
+  color: #8a94a5;
+  font-size: 11px;
+  margin-top: 8px;
+}
+
+.selected-rent {
+  border: 1px solid #dce6f5;
+  border-radius: 11px;
+  background: #f6f8fc;
+  padding: 16px;
+  margin: -4px 0 24px;
+}
+
+.selected-rent-label {
+  color: #77849a;
+  font-size: 11px;
+}
+
+.selected-rent-value {
+  color: #20365b;
+  font-size: 24px;
+  font-weight: 750;
+  margin: 4px 0;
+}
+
+.selected-rent-detail {
+  color: #78849a;
+  font-size: 11px;
+}
+
+.form-note {
+  display: flex;
+  gap: 9px;
+  color: #697890;
+  background: #f5f7fb;
+  border-radius: 9px;
+  padding: 13px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.form-note i {
+  color: #20365b;
+  font-size: 16px;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 25px;
+}
+
+.form-actions .btn {
+  min-height: 44px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.receipt-info {
+  background: #20365b;
+  color: #fff;
+  border-color: #20365b;
+  padding: 24px;
+}
+
+.receipt-info .info-icon {
+  background: #fff;
+  color: #20365b;
+  margin-bottom: 18px;
+}
+
+.receipt-info h3 {
+  font-size: 16px;
+  font-weight: 750;
+}
+
+.receipt-info p {
+  color: #d0d9e8;
+  font-size: 12px;
+  line-height: 1.7;
+  margin-top: 10px;
+}
+
+.info-divider {
+  border-top: 1px solid #435777;
+  margin: 20px 0;
+}
+
+.info-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  color: #e1e7f1;
+  font-size: 11px;
+  margin-top: 13px;
+}
+
+.info-line i {
+  color: #a7e4c2;
+}
+
+@media (max-width: 900px) {
+  .receipt-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .receipt-info {
+    display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .form-card {
+    padding: 18px;
+  }
+
+  .form-heading h1 {
+    font-size: 23px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .form-actions .btn,
+  .form-actions a {
+    width: 100%;
+    text-align: center;
+  }
+}

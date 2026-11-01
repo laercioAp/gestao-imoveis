@@ -1,0 +1,112 @@
+
+<div class="page-heading">
+  <div>
+    <h1>Imóveis</h1>
+    <p>Cadastre e acompanhe os imóveis da sua carteira.</p>
+  </div>
+  <button class="btn btn-primary" (click)="mostrarFormulario = !mostrarFormulario">
+    <i class="bi bi-plus-lg me-2"></i>Novo imóvel
+  </button>
+</div>
+
+<div *ngIf="mensagem" class="alert alert-info">{{ mensagem }}</div>
+
+<section *ngIf="mostrarFormulario" class="card form-card mb-4">
+  <div class="card-body">
+    <h2 class="section-title">Dados do imóvel</h2>
+
+    <form (ngSubmit)="salvar()" #form="ngForm">
+      <div class="row g-3">
+        <div class="col-12 col-md-6">
+          <label class="form-label">Descrição</label>
+          <input class="form-control" name="descricao" [(ngModel)]="novoImovel.descricao"
+            placeholder="Ex.: Apartamento Jardim Central" required>
+        </div>
+
+        <div class="col-12 col-md-6">
+          <label class="form-label">Tipo de imóvel</label>
+          <select class="form-select" name="tipo" [(ngModel)]="novoImovel.tipo" required>
+            <option>Apartamento</option>
+            <option>Casa</option>
+            <option>Sala comercial</option>
+            <option>Vaga de garagem</option>
+            <option>Outro</option>
+          </select>
+        </div>
+
+        <div class="col-12">
+          <label class="form-label">Endereço</label>
+          <input class="form-control" name="endereco" [(ngModel)]="novoImovel.endereco"
+            placeholder="Rua, número, bairro e cidade" required>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label">Valor mensal (R$)</label>
+          <input class="form-control" type="number" name="valorAluguel"
+            [(ngModel)]="novoImovel.valorAluguel" min="0.01" step="0.01" required>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label">Dia do vencimento</label>
+          <input class="form-control" type="number" name="diaVencimento"
+            [(ngModel)]="novoImovel.diaVencimento" min="1" max="31" required>
+        </div>
+
+        <div class="col-12 col-md-4">
+          <label class="form-label">Situação</label>
+          <select class="form-select" name="situacao" [(ngModel)]="novoImovel.situacao">
+            <option value="DISPONIVEL">Disponível</option>
+            <option value="ALUGADO">Alugado</option>
+          </select>
+        </div>
+
+        <div class="col-12" *ngIf="novoImovel.situacao === 'ALUGADO'">
+          <label class="form-label">Nome do inquilino</label>
+          <input class="form-control" name="inquilino" [(ngModel)]="novoImovel.inquilino"
+            placeholder="Nome do inquilino">
+          <div class="form-text">Nesta primeira versão, informe o nome manualmente.</div>
+        </div>
+      </div>
+
+      <div class="d-flex gap-2 justify-content-end mt-4">
+        <button type="button" class="btn btn-light" (click)="mostrarFormulario = false">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
+          Salvar imóvel
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="card list-card">
+  <div class="card-body">
+    <h2 class="section-title">Imóveis cadastrados ({{ imoveis.length }})</h2>
+
+    <div *ngIf="imoveis.length === 0" class="empty-state">
+      <i class="bi bi-buildings"></i>
+      <p>Nenhum imóvel cadastrado ainda.</p>
+      <span>Selecione “Novo imóvel” para começar.</span>
+    </div>
+
+    <div *ngFor="let imovel of imoveis" class="property-row">
+      <div class="property-icon"><i class="bi bi-building"></i></div>
+      <div class="property-info">
+        <strong>{{ imovel.descricao }}</strong>
+        <span>{{ imovel.tipo }} · {{ imovel.endereco }}</span>
+        <span *ngIf="imovel.situacao === 'ALUGADO'">Inquilino: {{ imovel.inquilino }}</span>
+        <span>Vencimento todo dia {{ imovel.diaVencimento }}</span>
+      </div>
+      <div class="property-value">
+        <strong>{{ imovel.valorAluguel | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</strong>
+        <span class="badge" [class.text-bg-success]="imovel.situacao === 'ALUGADO'"
+          [class.text-bg-secondary]="imovel.situacao === 'DISPONIVEL'">
+          {{ imovel.situacao === 'ALUGADO' ? 'Alugado' : 'Disponível' }}
+        </span>
+        <button type="button" class="btn btn-sm btn-outline-danger mt-2"
+          (click)="excluir(imovel.id)">Excluir</button>
+      </div>
+    </div>
+  </div>
+</section>
