@@ -1,0 +1,470 @@
+
+<div class="pagamentos-container">
+
+  <!-- Cabeçalho -->
+  <div class="pagina-cabecalho">
+    <div>
+      <h2>Pagamentos</h2>
+      <p>Gerencie as mensalidades e acompanhe os recebimentos dos aluguéis.</p>
+    </div>
+
+    <button
+      class="btn-atualizar"
+      type="button"
+      (click)="carregarPagamentos()"
+      [disabled]="carregando">
+      <i class="bi bi-arrow-clockwise"></i>
+      Atualizar
+    </button>
+  </div>
+
+  <!-- Geração de mensalidades -->
+  <section class="geracao-card">
+
+    <div class="geracao-info">
+      <div class="icone-geracao">
+        <i class="bi bi-calendar2-plus"></i>
+      </div>
+
+      <div>
+        <h5>Gerar mensalidades</h5>
+        <p>
+          Gere automaticamente os pagamentos dos contratos ativos
+          para o mês selecionado.
+        </p>
+      </div>
+    </div>
+
+    <div class="geracao-acoes">
+
+      <div class="campo-competencia">
+        <label for="competencia">Mês de competência</label>
+        <input
+          id="competencia"
+          type="month"
+          class="form-control"
+          [(ngModel)]="competencia">
+      </div>
+
+      <div class="campo-competencia">
+        <label for="contrato">Contrato</label>
+
+        <select
+          id="contrato"
+          class="form-select"
+          [(ngModel)]="contratoSelecionadoId"
+          [disabled]="carregandoContratos || gerando">
+
+          <option [ngValue]="null">
+            Todos os contratos ativos
+          </option>
+
+          <option
+            *ngFor="let contrato of contratosAtivos"
+            [ngValue]="contrato.id">
+
+            #{{ contrato.id }} -
+            {{ contrato.imovelTitulo }} -
+            {{ contrato.inquilinoNome }}
+
+          </option>
+
+        </select>
+      </div>
+
+      <button
+        type="button"
+        class="btn-gerar"
+        (click)="gerarMensalidades()"
+        [disabled]="gerando || !competencia || carregandoContratos">
+
+        <span
+          *ngIf="gerando"
+          class="spinner-border spinner-border-sm me-2">
+        </span>
+
+        <i *ngIf="!gerando" class="bi bi-plus-circle me-1"></i>
+
+        {{ gerando ? 'Gerando...' : 'Gerar mensalidades' }}
+      </button>
+
+    </div>
+
+    <div
+      *ngIf="carregandoContratos"
+      class="text-muted small mt-3">
+      Carregando contratos ativos...
+    </div>
+
+    <div
+      *ngIf="mensagemErroContratos"
+      class="alert alert-warning mt-3 mb-0">
+      {{ mensagemErroContratos }}
+
+      <button
+        type="button"
+        class="btn btn-sm btn-outline-warning ms-2"
+        (click)="carregarContratosAtivos()">
+        Tentar novamente
+      </button>
+    </div>
+
+    <div
+      *ngIf="!carregandoContratos && !mensagemErroContratos && contratosAtivos.length === 0"
+      class="text-muted small mt-3">
+      Nenhum contrato ativo disponível para geração.
+    </div>
+
+  </section>
+
+  <!-- Mensagens -->
+  <div *ngIf="mensagemSucesso" class="alert alert-success mt-3">
+    <i class="bi bi-check-circle me-2"></i>
+    {{ mensagemSucesso }}
+  </div>
+
+  <div *ngIf="mensagemErro" class="alert alert-danger mt-3">
+    <i class="bi bi-exclamation-circle me-2"></i>
+    {{ mensagemErro }}
+  </div>
+
+  <!-- Detalhes da última geração -->
+  <section
+    *ngIf="resultadoGeracao"
+    class="lista-card mt-3">
+
+    <div class="lista-cabecalho">
+      <div>
+        <h5>Resultado da geração</h5>
+        <p>
+          Competência:
+          {{ resultadoGeracao.competencia | date:'MM/yyyy':'':'pt-BR' }}
+        </p>
+      </div>
+    </div>
+
+    <div class="resumo-grid">
+
+      <div class="resumo-card">
+        <div class="resumo-icone recebido">
+          <i class="bi bi-check-circle"></i>
+        </div>
+        <div>
+          <span>Geradas</span>
+          <h3>{{ resultadoGeracao.quantidadeGerada }}</h3>
+        </div>
+      </div>
+
+      <div class="resumo-card">
+        <div class="resumo-icone previsto">
+          <i class="bi bi-calendar-check"></i>
+        </div>
+        <div>
+          <span>Já existentes</span>
+          <h3>{{ resultadoGeracao.quantidadeJaExistente }}</h3>
+        </div>
+      </div>
+
+      <div class="resumo-card">
+        <div class="resumo-icone atrasado">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div>
+          <span>Ignorados</span>
+          <h3>{{ resultadoGeracao.quantidadeContratosIgnorados }}</h3>
+        </div>
+      </div>
+
+    </div>
+
+    <div
+      *ngIf="resultadoGeracao.detalhes?.length"
+      class="table-responsive mt-3">
+
+      <table class="table table-sm align-middle">
+        <thead>
+          <tr>
+            <th>Contrato</th>
+            <th>Resultado</th>
+            <th>Motivo</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let detalhe of resultadoGeracao.detalhes">
+
+            <td>#{{ detalhe.contratoId }}</td>
+
+            <td>
+              <span
+                *ngIf="detalhe.resultado === 'GERADO'"
+                class="status-badge status-pago">
+                Gerado
+              </span>
+
+              <span
+                *ngIf="detalhe.resultado === 'JA_EXISTENTE'"
+                class="status-badge status-pendente">
+                Já existente
+              </span>
+
+              <span
+                *ngIf="detalhe.resultado === 'IGNORADO'"
+                class="status-badge status-atrasado">
+                Ignorado
+              </span>
+            </td>
+
+            <td>{{ detalhe.motivo }}</td>
+
+          </tr>
+        </tbody>
+      </table>
+
+    </div>
+
+  </section>
+
+  <!-- Indicadores -->
+  <section class="resumo-grid">
+
+    <div class="resumo-card">
+      <div class="resumo-icone previsto">
+        <i class="bi bi-wallet2"></i>
+      </div>
+      <div>
+        <span>Total previsto</span>
+        <h3>{{ totalPrevisto | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</h3>
+      </div>
+    </div>
+
+    <div class="resumo-card">
+      <div class="resumo-icone recebido">
+        <i class="bi bi-check-circle"></i>
+      </div>
+      <div>
+        <span>Total recebido</span>
+        <h3>{{ totalRecebido | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</h3>
+      </div>
+    </div>
+
+    <div class="resumo-card">
+      <div class="resumo-icone pendente">
+        <i class="bi bi-clock"></i>
+      </div>
+      <div>
+        <span>Total pendente</span>
+        <h3>{{ totalPendente | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</h3>
+      </div>
+    </div>
+
+    <div class="resumo-card">
+      <div class="resumo-icone atrasado">
+        <i class="bi bi-exclamation-triangle"></i>
+      </div>
+      <div>
+        <span>Total atrasado</span>
+        <h3>{{ totalAtrasado | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}</h3>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- Lista de pagamentos -->
+  <section class="lista-card">
+
+    <div class="lista-cabecalho">
+      <div>
+        <h5>Mensalidades</h5>
+        <p>Acompanhe os pagamentos dos seus contratos.</p>
+      </div>
+
+      <span class="quantidade-registros">
+        {{ pagamentosFiltrados.length }} registro(s)
+      </span>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filtros">
+
+      <button
+        type="button"
+        [class.ativo]="filtro === 'TODOS'"
+        (click)="alterarFiltro('TODOS')">
+        Todos
+        <span>{{ pagamentos.length }}</span>
+      </button>
+
+      <button
+        type="button"
+        [class.ativo]="filtro === 'PENDENTES'"
+        (click)="alterarFiltro('PENDENTES')">
+        Pendentes
+        <span>{{ quantidadePendentes }}</span>
+      </button>
+
+      <button
+        type="button"
+        [class.ativo]="filtro === 'PAGOS'"
+        (click)="alterarFiltro('PAGOS')">
+        Pagos
+        <span>{{ quantidadePagos }}</span>
+      </button>
+
+      <button
+        type="button"
+        [class.ativo]="filtro === 'ATRASADOS'"
+        (click)="alterarFiltro('ATRASADOS')">
+        Atrasados
+        <span>{{ quantidadeAtrasados }}</span>
+      </button>
+
+    </div>
+
+    <!-- Carregamento -->
+    <div *ngIf="carregando" class="estado-vazio">
+      <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Carregando...</span>
+      </div>
+      <p>Carregando pagamentos...</p>
+    </div>
+
+    <!-- Erro -->
+    <div
+      *ngIf="carregamentoConcluido && mensagemErro"
+      class="estado-vazio">
+
+      <i class="bi bi-exclamation-circle"></i>
+
+      <h6>Não foi possível carregar as mensalidades</h6>
+
+      <p>{{ mensagemErro }}</p>
+
+      <button
+        type="button"
+        class="btn-atualizar mt-3"
+        (click)="carregarPagamentos()">
+        <i class="bi bi-arrow-clockwise"></i>
+        Tentar novamente
+      </button>
+
+    </div>
+
+    <!-- Tabela -->
+    <div
+      class="table-responsive"
+      *ngIf="carregamentoConcluido && !mensagemErro && pagamentosFiltrados.length > 0">
+
+      <table class="table tabela-pagamentos align-middle">
+
+        <thead>
+          <tr>
+            <th>Imóvel / Inquilino</th>
+            <th>Competência</th>
+            <th>Vencimento</th>
+            <th>Valor previsto</th>
+            <th>Valor pago</th>
+            <th>Status</th>
+            <th class="text-end">Ação</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          <tr *ngFor="let pagamento of pagamentosFiltrados">
+
+            <td>
+              <strong>{{ pagamento.imovelTitulo }}</strong>
+              <small>{{ pagamento.inquilinoNome }}</small>
+            </td>
+
+            <td>
+              {{ pagamento.competencia | date:'MM/yyyy':'':'pt-BR' }}
+            </td>
+
+            <td>
+              {{ pagamento.dataVencimento | date:'dd/MM/yyyy':'':'pt-BR' }}
+            </td>
+
+            <td>
+              {{ pagamento.valorPrevisto | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+            </td>
+
+            <td>
+              <span *ngIf="pagamento.valorPago !== null">
+                {{ pagamento.valorPago | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+              </span>
+
+              <span
+                *ngIf="pagamento.valorPago === null"
+                class="texto-secundario">
+                —
+              </span>
+            </td>
+
+            <td>
+
+              <span
+                *ngIf="pagamento.status === 'PAGO'"
+                class="status-badge status-pago">
+                <i class="bi bi-check-circle"></i>
+                Pago
+              </span>
+
+              <span
+                *ngIf="estaAtrasado(pagamento)"
+                class="status-badge status-atrasado">
+                <i class="bi bi-exclamation-circle"></i>
+                Atrasado
+              </span>
+
+              <span
+                *ngIf="pagamento.status === 'PENDENTE' && !estaAtrasado(pagamento)"
+                class="status-badge status-pendente">
+                <i class="bi bi-clock"></i>
+                Pendente
+              </span>
+
+            </td>
+
+            <td class="text-end">
+
+              <a
+                *ngIf="pagamento.status === 'PENDENTE'"
+                routerLink="/recibos/novo"
+                class="btn-acao">
+                Registrar
+              </a>
+
+              <span
+                *ngIf="pagamento.status === 'PAGO'"
+                class="texto-secundario">
+                Concluído
+              </span>
+
+            </td>
+
+          </tr>
+        </tbody>
+
+      </table>
+    </div>
+
+    <!-- Lista vazia -->
+    <div
+      *ngIf="carregamentoConcluido && !mensagemErro && pagamentosFiltrados.length === 0"
+      class="estado-vazio">
+
+      <i class="bi bi-calendar-check"></i>
+
+      <h6>Nenhum pagamento encontrado</h6>
+
+      <p>
+        Não existem pagamentos para o filtro selecionado.
+        Você pode gerar as mensalidades dos contratos acima.
+      </p>
+
+    </div>
+
+  </section>
+
+</div>

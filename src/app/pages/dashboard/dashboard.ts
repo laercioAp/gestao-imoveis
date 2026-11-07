@@ -1,61 +1,201 @@
 
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectorRef
+} from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { Aluguel, GestaoService } from '../../services/gestao';
+import { forkJoin } from 'rxjs';
+import { finalize } from 'rxjs/operators';
+
+import {
+  PagamentosApiService,
+  Pagamento
+} from '../../services/pagamentos-api.service';
+
+import {
+  ContratosApiService,
+  Contrato
+} from '../../services/contratos-api.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
 export class Dashboard implements OnInit {
-  alugueis: Aluguel[] = [];
-  competenciaAtual = '2026-10';
-  mesAtual = 'Outubro de 2026';
+
+  pagamentos: Pagamento[] = [];
+  pagamentosCompetencia: Pagamento[] = [];
+  contratosAtivos: Contrato[] = [];
+
+  competenciaAtual = this.obterCompetenciaAtual();
+  mesAtual = '';
+
   recebidos = 0;
   pendentes = 0;
   atrasados = 0;
+  quantidadeContratosAtivos = 0;
 
-  constructor(private gestaoService: GestaoService) { }
+  carregando = false;
+  mensagemErro = '';
+
+  constructor(
+    private pagamentosService: PagamentosApiService,
+    private contratosService: ContratosApiService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
-    this.atualizarDashboard();
+    this.atualizarNomeMes();
+    this.carregarDados();
+  }
+
+  private obterCompetenciaAtual(): string {
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+
+    return `${ano}-${mes}`;
+  }
+
+  carregarDados(): void {
+    this.carregando = true;
+    this.mensagemErro = '';
+
+    forkJoin({
+      pagamentos: this.pagamentosService.listar(),
+      contratos: this.contratosService.listarPorStatus('ATIVO')
+    })
+      .pipe(
+        finalize(() => {
+          this.carregando = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (resultado) => {
+          this.pagamentos = resultado.pagamentos;
+          this.contratosAtivos = resultado.contratos;
+
+          this.quantidadeContratosAtivos = this.contratosAtivos.length;
+
+          this.atualizarDashboard();
+
+          this.cdr.detectChanges();
+        },
+        error: (erro) => {
+          console.error('Erro ao carregar Dashboard:', erro);
+
+          this.mensagemErro =
+            'Não foi possível carregar os dados do Dashboard. Verifique sua conexão com o servidor.';
+
+          this.pagamentos = [];
+          this.pagamentosCompetencia = [];
+          this.contratosAtivos = [];
+          this.quantidadeContratosAtivos = 0;
+
+          this.calcularTotais();
+
+          this.cdr.detectChanges();
+        }
+      });
   }
 
   atualizarDashboard(): void {
-    this.alugueis = this.gestaoService.listar()
-      .filter(aluguel => aluguel.competencia === this.competenciaAtual);
+    this.atualizarNomeMes();
 
-    this.recebidos = this.gestaoService.totalRecebido(this.competenciaAtual);
-    this.pendentes = this.gestaoService.totalPendente(this.competenciaAtual);
-    this.atrasados = this.gestaoService.totalAtrasado(this.competenciaAtual);
+    this.pagamentosCompetencia = this.pagamentos.filter(pagamento =>
+      pagamento.competencia?.substring(0, 7) === this.competenciaAtual
+    );
 
-    console.log('Competência:', this.competenciaAtual);
-    console.log('Aluguéis do dashboard:', this.alugueis);
-    console.log('Totais:', {
-      recebidos: this.recebidos,
-      pendentes: this.pendentes,
-      atrasados: this.atrasados
-    });
+    this.calcularTotais();
   }
 
-  estaAtrasado(aluguel: Aluguel): boolean {
-    return this.gestaoService.estaAtrasado(aluguel);
+  private atualizarNomeMes(): void {
+    if (!this.competenciaAtual) {
+      this.mesAtual = '';
+      return;
+    }
+
+    const [ano, mes] = this.competenciaAtual.split('-').map(Number);
+
+    const nomeMes = new Date(ano, mes - 1, 1)
+      .toLocaleDateString('pt-BR', {
+        month: 'long',
+        year: 'numeric'
+      });
+
+    this.mesAtual =
+      nomeMes.charAt(0).toUpperCase() + nomeMes.slice(1);
   }
 
-  formatarData(data: string): string {
-    if (!data) return '—';
+  private calcularTotais(): void {
+    this.recebidos = this.pagamentosCompetencia
+      .filter(p => p.status === 'PAGO')
+      .reduce((total, p) => total + (p.valorPago ?? 0), 0);
 
-    const [ano, mes, dia] = data.split('-').map(Number);
+    this.pendentes = this.pagamentosCompetencia
+      .filter(p => p.status === 'PENDENTE' && !this.estaAtrasado(p))
+      .reduce((total, p) => total + p.valorPrevisto, 0);
+
+    this.atrasados = this.pagamentosCompetencia
+      .filter(p => this.estaAtrasado(p))
+      .reduce((total, p) => total + p.valorPrevisto, 0);
+  }
+
+  estaAtrasado(pagamento: Pagamento): boolean {
+    if (pagamento.status !== 'PENDENTE') {
+      return false;
+    }
+
+    const hoje = this.obterDataAtual();
+
+    return pagamento.dataVencimento < hoje;
+  }
+
+  private obterDataAtual(): string {
+    const hoje = new Date();
+
+    const ano = hoje.getFullYear();
+    const mes = String(hoje.getMonth() + 1).padStart(2, '0');
+    const dia = String(hoje.getDate()).padStart(2, '0');
+
+    return `${ano}-${mes}-${dia}`;
+  }
+
+  formatarData(data: string | null): string {
+    if (!data) {
+      return '—';
+    }
+
+    const [ano, mes, dia] = data.substring(0, 10).split('-').map(Number);
+
     return new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR');
   }
 
-  getDescricaoStatus(aluguel: Aluguel): string {
-    if (aluguel.status === 'PAGO') return 'Pago';
+  getDescricaoStatus(pagamento: Pagamento): string {
+    if (pagamento.status === 'PAGO') {
+      return 'Pago';
+    }
 
-    return this.estaAtrasado(aluguel) ? 'Em atraso' : 'Pendente';
+    return this.estaAtrasado(pagamento) ? 'Em atraso' : 'Pendente';
+  }
+
+  getDescricaoCompetencia(pagamento: Pagamento): string {
+    const [ano, mes] = pagamento.competencia
+      .substring(0, 7)
+      .split('-')
+      .map(Number);
+
+    return new Date(ano, mes - 1, 1)
+      .toLocaleDateString('pt-BR', {
+        month: 'long',
+        year: 'numeric'
+      });
   }
 }

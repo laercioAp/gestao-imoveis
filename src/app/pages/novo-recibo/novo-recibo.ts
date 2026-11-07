@@ -1,10 +1,17 @@
-
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
-import { jsPDF } from 'jspdf';
-import { Aluguel, GestaoService } from '../../services/gestao';
+import { RouterLink } from '@angular/router';
+import { finalize, switchMap } from 'rxjs';
+
+import {
+  Pagamento,
+  PagamentosApiService
+} from '../../services/pagamentos-api.service';
+
+import {
+  RecibosApiService
+} from '../../services/recibos-api.service';
 
 @Component({
   selector: 'app-novo-recibo',
@@ -13,30 +20,59 @@ import { Aluguel, GestaoService } from '../../services/gestao';
   templateUrl: './novo-recibo.html',
   styleUrl: './novo-recibo.css'
 })
-export class NovoRecibo {
-  alugueisPendentes: Aluguel[] = [];
-  aluguelSelecionadoId = '';
+export class NovoRecibo implements OnInit {
+  alugueisPendentes: Pagamento[] = [];
+
+  aluguelSelecionadoId: number | null = null;
+
   dataPagamento = this.hojeLocal();
   formaPagamento = 'PIX';
+
   mensagemErro = '';
+  mensagemSucesso = '';
+
+  carregando = false;
+  registrando = false;
 
   constructor(
-    private gestaoService: GestaoService,
-    private router: Router
-  ) {
+    private pagamentosApi: PagamentosApiService,
+    private recibosApi: RecibosApiService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
     this.carregarPendentes();
   }
 
   private carregarPendentes(): void {
-    this.alugueisPendentes = this.gestaoService
-      .listar()
-      .filter(aluguel => aluguel.status === 'PENDENTE');
+    this.carregando = true;
+    this.mensagemErro = '';
+
+    this.pagamentosApi.listarPendentes()
+      .pipe(finalize(() => {
+        this.carregando = false;
+        this.cdr.detectChanges();
+      }))
+      .subscribe({
+        next: (pagamentos) => {
+          this.alugueisPendentes = pagamentos;
+        },
+        error: (erro) => {
+          this.mensagemErro =
+            erro?.error?.message ||
+            'Não foi possível carregar os pagamentos pendentes.';
+        }
+      });
   }
 
-  get aluguelSelecionado(): Aluguel | undefined {
-    if (!this.aluguelSelecionadoId) return undefined;
+  get aluguelSelecionado(): Pagamento | undefined {
+    if (this.aluguelSelecionadoId === null) {
+      return undefined;
+    }
 
-    return this.gestaoService.buscarPorId(Number(this.aluguelSelecionadoId));
+    return this.alugueisPendentes.find(
+      pagamento => pagamento.id === this.aluguelSelecionadoId
+    );
   }
 
   hojeLocal(): string {
@@ -49,19 +85,29 @@ export class NovoRecibo {
     ].join('-');
   }
 
-  formatarData(data: string): string {
+  formatarData(data: string | null): string {
     if (!data) return '—';
 
     const [ano, mes, dia] = data.split('-').map(Number);
+
     return new Date(ano, mes - 1, dia).toLocaleDateString('pt-BR');
+  }
+
+  formatarCompetencia(competencia: string): string {
+    if (!competencia) return '—';
+
+    const [ano, mes] = competencia.split('-');
+
+    return `${mes}/${ano}`;
   }
 
   registrarPagamento(): void {
     this.mensagemErro = '';
+    this.mensagemSucesso = '';
 
-    const aluguel = this.aluguelSelecionado;
+    const pagamento = this.aluguelSelecionado;
 
-    if (!aluguel) {
+    if (!pagamento) {
       this.mensagemErro = 'Selecione um aluguel pendente.';
       return;
     }
@@ -71,101 +117,105 @@ export class NovoRecibo {
       return;
     }
 
-    try {
-      const pagamento = this.gestaoService.registrarPagamento(
-        aluguel.id,
-        this.dataPagamento,
-        this.formaPagamento
-      );
-
-      this.gerarPdf(pagamento);
-
-      // Atualiza a lista de pendências após o registro.
-      this.carregarPendentes();
-
-      // Volta ao dashboard depois de gerar o recibo.
-      this.router.navigate(['/inicio']);
-    } catch (erro) {
-      this.mensagemErro = erro instanceof Error
-        ? erro.message
-        : 'Não foi possível registrar o pagamento.';
+    if (this.dataPagamento > this.hojeLocal()) {
+      this.mensagemErro = 'A data do pagamento não pode ser futura.';
+      return;
     }
+
+    const confirmar = window.confirm(
+      `Confirma o recebimento de ${this.formatarMoeda(pagamento.valorPrevisto)} ` +
+      `referente ao imóvel ${pagamento.imovelTitulo}?`
+    );
+
+    if (!confirmar) return;
+
+    this.registrando = true;
+
+    this.pagamentosApi.registrarPagamento(
+      pagamento.id,
+      {
+        valorPago: Number(pagamento.valorPrevisto),
+        dataPagamento: this.dataPagamento,
+        formaPagamento: this.formaPagamento
+      }
+    )
+    .pipe(
+      switchMap(() => this.recibosApi.emitir(pagamento.id)),
+      switchMap((recibo) =>
+        this.recibosApi.baixarPdf(recibo.pagamentoId)
+      ),
+      finalize(() => {
+        this.registrando = false;
+        this.cdr.detectChanges();
+      })
+    )
+    .subscribe({
+      next: (resposta) => {
+        if (!resposta.body) {
+          this.mensagemErro =
+            'O pagamento foi registrado, mas o PDF não foi retornado.';
+          return;
+        }
+
+        const contentDisposition =
+          resposta.headers.get('Content-Disposition');
+
+        const nomeArquivo = this.extrairNomeArquivo(contentDisposition)
+          || `recibo-${pagamento.id}.pdf`;
+
+        this.baixarArquivo(resposta.body, nomeArquivo);
+
+        this.mensagemSucesso =
+          'Pagamento registrado e recibo gerado com sucesso!';
+
+        this.alugueisPendentes = this.alugueisPendentes.filter(
+          item => item.id !== pagamento.id
+        );
+
+        this.aluguelSelecionadoId = null;
+        this.dataPagamento = this.hojeLocal();
+        this.formaPagamento = 'PIX';
+
+        this.cdr.detectChanges();
+      },
+      error: (erro) => {
+        this.mensagemErro =
+          erro?.error?.message ||
+          'Não foi possível concluir a operação. Verifique se o pagamento foi registrado antes de tentar novamente.';
+      }
+    });
   }
 
-  private gerarPdf(aluguel: Aluguel): void {
-    const pdf = new jsPDF();
-    const azul = '#20365B';
-    const valorFormatado = aluguel.valor.toLocaleString('pt-BR', {
+  private formatarMoeda(valor: number): string {
+    return Number(valor).toLocaleString('pt-BR', {
       style: 'currency',
       currency: 'BRL'
     });
+  }
 
-    pdf.setFillColor(32, 54, 91);
-    pdf.rect(0, 0, 210, 39, 'F');
+  private extrairNomeArquivo(
+    contentDisposition: string | null
+  ): string | null {
+    if (!contentDisposition) return null;
 
-    pdf.setTextColor(255, 255, 255);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(19);
-    pdf.text('RECIBO DE ALUGUEL', 20, 20);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    pdf.text(`Nº ${aluguel.numeroRecibo ?? 'REC-' + aluguel.id}`, 20, 29);
-
-    pdf.setTextColor(32, 54, 91);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(12);
-    pdf.text('COMPROVANTE DE PAGAMENTO', 20, 55);
-
-    pdf.setDrawColor(220, 226, 235);
-    pdf.line(20, 61, 190, 61);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(11);
-    pdf.setTextColor(55, 65, 81);
-
-    pdf.text('Locador: Laercio Aparecido Pedroso', 20, 75);
-    pdf.text(`Imóvel: ${aluguel.imovel}`, 20, 87);
-    pdf.text(`Inquilino: ${aluguel.inquilino}`, 20, 99);
-    pdf.text(`Competência: ${aluguel.competencia}`, 20, 111);
-    pdf.text(`Vencimento: ${this.formatarData(aluguel.vencimento)}`, 20, 123);
-    pdf.text(`Data do pagamento: ${this.formatarData(aluguel.dataPagamento ?? '')}`, 20, 135);
-    pdf.text(`Forma de pagamento: ${aluguel.formaPagamento ?? 'Não informada'}`, 20, 147);
-
-    pdf.setFillColor(242, 245, 250);
-    pdf.roundedRect(20, 160, 170, 25, 3, 3, 'F');
-
-    pdf.setTextColor(32, 54, 91);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(15);
-    pdf.text(`VALOR RECEBIDO: ${valorFormatado}`, 27, 176);
-
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    pdf.setTextColor(85, 95, 110);
-    pdf.text(
-      'Declaro o recebimento do valor acima referente à locação informada.',
-      20,
-      202,
-      { maxWidth: 170 }
+    const resultado = contentDisposition.match(
+      /filename="?([^";]+)"?/i
     );
 
-    pdf.setDrawColor(130, 140, 155);
-    pdf.line(40, 242, 170, 242);
+    return resultado?.[1] || null;
+  }
 
-    pdf.setTextColor(55, 65, 81);
-    pdf.setFontSize(10);
-    pdf.text('Laercio Aparecido Pedroso - Locador', 105, 250, {
-      align: 'center'
-    });
+  private baixarArquivo(blob: Blob, nomeArquivo: string): void {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
 
-    pdf.setTextColor(100, 110, 125);
-    pdf.setFontSize(8);
-    pdf.text('Recibo gerado pelo Sistema de Gestão de Aluguéis', 105, 280, {
-      align: 'center'
-    });
+    link.href = url;
+    link.download = nomeArquivo;
 
-    // O nome do arquivo evita espaços e caracteres especiais.
-    pdf.save(`${aluguel.numeroRecibo ?? 'recibo-' + aluguel.id}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
   }
 }

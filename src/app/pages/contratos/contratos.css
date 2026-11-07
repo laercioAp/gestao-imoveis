@@ -23,10 +23,320 @@
   color: var(--texto);
 }
 
+.pagina-contratos .form-control,
+.pagina-contratos .form-select {
+  border-color: #dce3ec;
+  border-radius: 9px;
+  min-height: 42px;
+}
+
+.pagina-contratos .form-control:focus,
+.pagina-contratos .form-select:focus {
+  border-color: #829bbd;
+  box-shadow: 0 0 0 0.2rem rgba(23, 43, 77, 0.10);
+}
+
+.pagina-contratos textarea.form-control {
+  min-height: auto;
+  resize: vertical;
+}
+
 .pagina-contratos .contrato-item {
   border-bottom: 1px solid #e9edf3;
 }
 
 .pagina-contratos .contrato-item:last-child {
   border-bottom: none;
+}
+
+/* =========================================
+   EDITOR DE CLÁUSULAS
+========================================= */
+
+.clausula-editor {
+  background: #fbfcfe;
+  border-color: #e2e8f0 !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.clausula-editor:hover {
+  border-color: #cbd5e1 !important;
+}
+
+.clausula-editor .form-label {
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.clausula-editor textarea {
+  line-height: 1.6;
+  min-height: 110px;
+}
+
+.clausula-editor .btn {
+  border-radius: 7px;
+}
+
+.clausula-editor .badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 9px;
+}
+
+.clausula-editor .form-control {
+  background-color: #fff;
+}
+
+.clausula-editor .form-control:focus {
+  background-color: #fff;
+}
+
+/* =========================================
+   BOTÕES E AÇÕES
+========================================= */
+
+.pagina-contratos .btn {
+  border-radius: 9px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.pagina-contratos .btn:disabled {
+  cursor: not-allowed;
+}
+
+.pagina-contratos .btn-outline-secondary:disabled {
+  opacity: 0.4;
+}
+
+/* =========================================
+   MODAL PERSONALIZADO DE EXCLUSÃO
+========================================= */
+
+.custom-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1055;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.62);
+  backdrop-filter: blur(4px);
+  animation: modalBackdropIn 0.2s ease;
+}
+
+.custom-modal {
+  width: 100%;
+  max-width: 440px;
+  padding: 30px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.22);
+  text-align: center;
+  animation: modalContentIn 0.25s ease;
+}
+
+.custom-modal-icon {
+  width: 62px;
+  height: 62px;
+  margin: 0 auto 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #fff1f0;
+  color: #dc3545;
+  font-size: 28px;
+}
+
+.custom-modal h4 {
+  margin-bottom: 10px;
+  color: #172b4d;
+  font-size: 21px;
+  font-weight: 700;
+}
+
+.custom-modal-description {
+  margin-bottom: 22px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.custom-modal-property {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  margin-bottom: 16px;
+  text-align: left;
+  background: #f8fafc;
+  border: 1px solid #e8edf3;
+  border-radius: 12px;
+}
+
+.custom-modal-property-icon {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #eaf0f8;
+  color: var(--azul-marinho, #172b4d);
+  font-size: 21px;
+}
+
+.custom-modal-property-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.custom-modal-property-info strong {
+  color: #172b4d;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.custom-modal-property-info span {
+  color: #475569;
+  font-size: 13px;
+}
+
+.custom-modal-property-info small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.custom-modal-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 12px;
+  margin-bottom: 22px;
+  border-radius: 9px;
+  background: #fff8e6;
+  color: #946200;
+  text-align: left;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.custom-modal-warning i {
+  margin-top: 1px;
+  font-size: 15px;
+}
+
+.custom-modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn-modal-cancelar,
+.btn-modal-excluir {
+  flex: 1;
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-modal-cancelar {
+  border: 1px solid #d8dee8;
+  background: #fff;
+  color: #475569;
+}
+
+.btn-modal-cancelar:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.btn-modal-excluir {
+  border: 1px solid #dc3545;
+  background: #dc3545;
+  color: #fff;
+}
+
+.btn-modal-excluir:hover:not(:disabled) {
+  border-color: #bb2d3b;
+  background: #bb2d3b;
+}
+
+.btn-modal-cancelar:disabled,
+.btn-modal-excluir:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   ANIMAÇÕES
+========================================= */
+
+@keyframes modalBackdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes modalContentIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* =========================================
+   RESPONSIVIDADE
+========================================= */
+
+@media (max-width: 768px) {
+  .clausula-editor {
+    padding: 14px !important;
+  }
+
+  .clausula-editor > .d-flex:first-child {
+    align-items: flex-start !important;
+  }
+
+  .clausula-editor > .d-flex:first-child > div:last-child {
+    width: 100%;
+  }
+
+  .clausula-editor > .d-flex:first-child > div:last-child .btn {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .custom-modal {
+    padding: 24px 18px;
+  }
+
+  .custom-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .pagina-contratos .card-body {
+    padding: 18px !important;
+  }
+
+  .clausula-editor .btn {
+    font-size: 12px;
+  }
 }

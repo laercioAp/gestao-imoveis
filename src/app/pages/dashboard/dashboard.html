@@ -1,9 +1,11 @@
-
 <div class="rent-dashboard">
+
   <header class="dashboard-header">
     <div>
       <span class="eyebrow">PAINEL FINANCEIRO</span>
+
       <h1>Meus aluguéis</h1>
+
       <p class="month-label">
         <i class="bi bi-calendar3"></i>
         {{ mesAtual }}
@@ -15,123 +17,284 @@
     </div>
   </header>
 
-  <section class="summary-grid">
-    <article class="summary-card received-card">
-      <div class="summary-card-top">
-        <span>Recebido</span>
-        <span class="summary-icon">
-          <i class="bi bi-check-lg"></i>
-        </span>
-      </div>
-
-      <div class="summary-value">
-        {{ recebidos | currency:'BRL':'symbol':'1.0-0':'pt-BR' }}
-      </div>
-
-      <div class="summary-caption">
-        <span class="status-dot"></span>
-        Pagamentos confirmados
-      </div>
-    </article>
-
-    <article class="summary-card pending-card">
-      <div class="summary-card-top">
-        <span>Pendente</span>
-        <span class="summary-icon">
-          <i class="bi bi-clock"></i>
-        </span>
-      </div>
-
-      <div class="summary-value">
-        {{ pendentes | currency:'BRL':'symbol':'1.0-0':'pt-BR' }}
-      </div>
-
-      <div class="summary-caption">
-        <span class="status-dot"></span>
-        Aguardando pagamento
-      </div>
-    </article>
-  </section>
-
-  <section class="rent-section">
-    <div class="section-heading">
-      <div>
-        <h2>Situação dos aluguéis</h2>
-        <p>Acompanhe seus recebimentos</p>
-      </div>
-
-      <span class="rent-count">{{ alugueis.length }} contratos</span>
+  <!-- Seleção da competência -->
+  <section class="competencia-filter">
+    <div>
+      <label for="competencia">Consultar competência</label>
+      <small>Selecione o mês que deseja visualizar.</small>
     </div>
 
-    <article class="rent-item" *ngFor="let aluguel of alugueis">
-      <div class="rent-item-icon"
-        [class.apartment-icon]="aluguel.imovel.toLowerCase().includes('apartamento')"
-        [class.garage-icon]="aluguel.imovel.toLowerCase().includes('garagem')">
-        <i [class]="aluguel.imovel.toLowerCase().includes('garagem')
-          ? 'bi bi-car-front-fill'
-          : 'bi bi-house-door-fill'"></i>
-      </div>
+    <input
+      id="competencia"
+      type="month"
+      class="competencia-input"
+      [(ngModel)]="competenciaAtual"
+      (ngModelChange)="atualizarDashboard()"
+    />
+  </section>
 
-      <div class="rent-item-content">
-        <div class="rent-item-title">{{ aluguel.imovel.includes('Apartamento')
-          ? 'Apartamento' : aluguel.imovel.includes('garagem') || aluguel.imovel.includes('Garagem')
-          ? 'Vaga de garagem' : aluguel.imovel }}</div>
+  <!-- Carregamento -->
+  <div *ngIf="carregando" class="loading-state">
+    <div class="spinner-border" role="status"></div>
+    <span>Carregando informações...</span>
+  </div>
 
-        <div class="rent-item-subtitle">
-          Aluguel · {{ aluguel.competencia === '2026-10' ? 'Outubro' : aluguel.competencia }}
-        </div>
+  <!-- Erro -->
+  <div *ngIf="mensagemErro" class="error-state">
+    <i class="bi bi-exclamation-circle"></i>
+    {{ mensagemErro }}
 
-        <div class="rent-item-value">
-          {{ aluguel.valor | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
-        </div>
+    <button type="button" (click)="carregarDados()">
+      Tentar novamente
+    </button>
+  </div>
 
-        <div *ngIf="aluguel.status === 'PAGO'" class="rent-detail paid-detail">
-          <i class="bi bi-file-earmark-check"></i>
-          Recibo disponível
-        </div>
+  <ng-container *ngIf="!carregando && !mensagemErro">
 
-        <div *ngIf="aluguel.status === 'PENDENTE'" class="rent-detail">
-          Vencimento: {{ formatarData(aluguel.vencimento) }}
-        </div>
+    <!-- Indicadores -->
+    <section class="summary-grid">
 
-        <div class="rent-item-actions">
-          <span class="status-badge"
-            [class.badge-paid]="aluguel.status === 'PAGO'"
-            [class.badge-overdue]="estaAtrasado(aluguel)"
-            [class.badge-pending]="aluguel.status === 'PENDENTE' && !estaAtrasado(aluguel)">
-            <span class="badge-dot"></span>
-            {{ getDescricaoStatus(aluguel) }}
+      <article class="summary-card received-card">
+        <div class="summary-card-top">
+          <span>Total recebido</span>
+
+          <span class="summary-icon">
+            <i class="bi bi-check-lg"></i>
           </span>
-
-          <a *ngIf="aluguel.status === 'PENDENTE'"
-             class="register-link"
-             routerLink="/recibos/novo">
-            Registrar pagamento
-            <i class="bi bi-arrow-up-right"></i>
-          </a>
-
-          <a *ngIf="aluguel.status === 'PAGO'"
-             class="receipt-link"
-             routerLink="/recibos/novo">
-            <i class="bi bi-check-circle"></i>
-            Pago
-          </a>
         </div>
+
+        <div class="summary-value">
+          {{ recebidos | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+        </div>
+
+        <div class="summary-caption">
+          <span class="status-dot"></span>
+          Pagamentos confirmados
+        </div>
+      </article>
+
+      <article class="summary-card pending-card">
+        <div class="summary-card-top">
+          <span>Total pendente</span>
+
+          <span class="summary-icon">
+            <i class="bi bi-clock"></i>
+          </span>
+        </div>
+
+        <div class="summary-value">
+          {{ pendentes | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+        </div>
+
+        <div class="summary-caption">
+          <span class="status-dot"></span>
+          Aguardando vencimento
+        </div>
+      </article>
+
+      <article class="summary-card overdue-card">
+        <div class="summary-card-top">
+          <span>Total atrasado</span>
+
+          <span class="summary-icon">
+            <i class="bi bi-exclamation-circle"></i>
+          </span>
+        </div>
+
+        <div class="summary-value">
+          {{ atrasados | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+        </div>
+
+        <div class="summary-caption">
+          <span class="status-dot"></span>
+          Pagamentos vencidos
+        </div>
+      </article>
+
+      <article class="summary-card contracts-card">
+        <div class="summary-card-top">
+          <span>Contratos ativos</span>
+
+          <span class="summary-icon">
+            <i class="bi bi-file-earmark-text"></i>
+          </span>
+        </div>
+
+        <div class="summary-value">
+          {{ quantidadeContratosAtivos }}
+        </div>
+
+        <div class="summary-caption">
+          <span class="status-dot"></span>
+          Contratos em andamento
+        </div>
+      </article>
+
+    </section>
+
+    <!-- Situação dos pagamentos -->
+    <section class="rent-section">
+
+      <div class="section-heading">
+        <div>
+          <h2>Situação dos aluguéis</h2>
+          <p>Pagamentos da competência selecionada</p>
+        </div>
+
+        <span class="rent-count">
+          {{ pagamentosCompetencia.length }}
+          {{ pagamentosCompetencia.length === 1 ? 'pagamento' : 'pagamentos' }}
+        </span>
       </div>
-    </article>
 
-    <div *ngIf="alugueis.length === 0" class="empty-state">
-      <i class="bi bi-house"></i>
-      <h3>Nenhum aluguel encontrado</h3>
-      <p>Os contratos desta competência aparecerão aqui.</p>
-    </div>
-  </section>
+      <article
+        class="rent-item"
+        *ngFor="let pagamento of pagamentosCompetencia"
+      >
 
-  <footer class="demo-notice">
-    <i class="bi bi-info-circle"></i>
-    <span>
-      Prévia ilustrativa, com dados fictícios. Os valores reais virão do banco
-      quando integrarmos o backend.
-    </span>
-  </footer>
+        <div
+          class="rent-item-icon"
+          [class.apartment-icon]="pagamento.imovelTitulo.toLowerCase().includes('apartamento')"
+          [class.garage-icon]="pagamento.imovelTitulo.toLowerCase().includes('garagem')"
+        >
+          <i
+            [class]="pagamento.imovelTitulo.toLowerCase().includes('garagem')
+              ? 'bi bi-car-front-fill'
+              : 'bi bi-house-door-fill'"
+          ></i>
+        </div>
+
+        <div class="rent-item-content">
+
+          <div class="rent-item-title">
+            {{ pagamento.imovelTitulo }}
+          </div>
+
+          <div class="rent-item-subtitle">
+            Inquilino: {{ pagamento.inquilinoNome }}
+          </div>
+
+          <div class="rent-item-value">
+            {{ pagamento.valorPrevisto | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+          </div>
+
+          <div class="rent-detail">
+            Vencimento: {{ formatarData(pagamento.dataVencimento) }}
+          </div>
+
+          <div
+            *ngIf="pagamento.status === 'PAGO'"
+            class="rent-detail paid-detail"
+          >
+            <i class="bi bi-file-earmark-check"></i>
+
+            Pagamento confirmado em
+            {{ formatarData(pagamento.dataPagamento) }}
+          </div>
+
+          <div class="rent-item-actions">
+
+            <span
+              class="status-badge"
+              [class.badge-paid]="pagamento.status === 'PAGO'"
+              [class.badge-overdue]="estaAtrasado(pagamento)"
+              [class.badge-pending]="pagamento.status === 'PENDENTE' && !estaAtrasado(pagamento)"
+            >
+              <span class="badge-dot"></span>
+
+              {{ getDescricaoStatus(pagamento) }}
+            </span>
+
+            <a
+              *ngIf="pagamento.status === 'PENDENTE'"
+              class="register-link"
+              routerLink="/recibos/novo"
+            >
+              Registrar pagamento
+              <i class="bi bi-arrow-up-right"></i>
+            </a>
+
+            <a
+              *ngIf="pagamento.status === 'PAGO'"
+              class="receipt-link"
+              routerLink="/pagamentos"
+            >
+              <i class="bi bi-check-circle"></i>
+              Ver pagamentos
+            </a>
+
+          </div>
+        </div>
+      </article>
+
+      <!-- Estado vazio -->
+      <div
+        *ngIf="pagamentosCompetencia.length === 0"
+        class="empty-state"
+      >
+        <i class="bi bi-house"></i>
+
+        <h3>Nenhum pagamento encontrado</h3>
+
+        <p>
+          Não existem mensalidades geradas para {{ mesAtual }}.
+        </p>
+
+        <a routerLink="/pagamentos">
+          Acessar pagamentos
+          <i class="bi bi-arrow-right"></i>
+        </a>
+      </div>
+
+    </section>
+
+    <!-- Atalhos -->
+    <section class="quick-actions">
+
+      <h2>Acesso rápido</h2>
+
+      <div class="quick-actions-grid">
+
+        <a routerLink="/pagamentos" class="quick-action">
+          <i class="bi bi-cash-stack"></i>
+          <span>
+            <strong>Pagamentos</strong>
+            <small>Consultar mensalidades</small>
+          </span>
+          <i class="bi bi-chevron-right"></i>
+        </a>
+
+        <a routerLink="/contratos" class="quick-action">
+          <i class="bi bi-file-earmark-text"></i>
+          <span>
+            <strong>Contratos</strong>
+            <small>Gerenciar contratos</small>
+          </span>
+          <i class="bi bi-chevron-right"></i>
+        </a>
+
+        <a routerLink="/recibos/novo" class="quick-action">
+          <i class="bi bi-receipt"></i>
+          <span>
+            <strong>Registrar pagamento</strong>
+            <small>Receber aluguel e emitir recibo</small>
+          </span>
+          <i class="bi bi-chevron-right"></i>
+        </a>
+
+      </div>
+
+    </section>
+
+    <footer class="demo-notice">
+      <i class="bi bi-info-circle"></i>
+
+      <span>
+        Os indicadores financeiros consideram somente os pagamentos
+        da competência selecionada. Consulte outros meses pelo seletor
+        acima.
+      </span>
+    </footer>
+
+  </ng-container>
 </div>

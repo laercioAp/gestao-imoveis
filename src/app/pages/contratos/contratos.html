@@ -1,87 +1,154 @@
 
 <div class="container-fluid pagina-contratos py-4">
+
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
     <div>
       <h2 class="mb-1">Contratos de locação</h2>
       <p class="text-secondary mb-0">
-        Preencha os dados, gere o PDF e salve como rascunho ou ativo.
+        Crie contratos personalizados, vinculando imóveis e inquilinos já cadastrados.
       </p>
     </div>
-    <span class="badge text-bg-light border">Modelo residencial</span>
+
+    <span class="badge text-bg-light border">Modelo personalizável</span>
   </div>
 
-  <div *ngIf="mensagem" class="alert alert-info" role="status">
+  <div *ngIf="mensagem"
+       class="alert"
+       [ngClass]="{
+         'alert-success': tipoMensagem === 'success',
+         'alert-danger': tipoMensagem === 'danger',
+         'alert-info': tipoMensagem === 'info'
+       }"
+       role="status">
     {{ mensagem }}
   </div>
 
-  <form #formContrato="ngForm" (ngSubmit)="gerarPdf()">
+  <div *ngIf="carregando" class="text-center py-4">
+    <div class="spinner-border text-primary" role="status"></div>
+    <p class="text-secondary mt-2 mb-0">Carregando dados...</p>
+  </div>
+
+  <form *ngIf="!carregando"
+        #formContrato="ngForm"
+        (ngSubmit)="gerarPdf()">
+
+    <!-- LOCADOR -->
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-body p-4">
-        <h5 class="mb-3">1. Dados do locador</h5>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+          <h5 class="mb-0">1. Dados do locador</h5>
+          <span class="badge text-bg-light border">Obrigatório</span>
+        </div>
 
         <div class="row g-3">
+
           <div class="col-md-6">
-            <label class="form-label">Nome completo *</label>
-            <input class="form-control" name="locadorNome"
-              [(ngModel)]="dados.locadorNome" required>
+            <label class="form-label">Nome completo ou razão social *</label>
+            <input class="form-control"
+                   name="locadorNome"
+                   [(ngModel)]="dados.locadorNome"
+                   maxlength="200"
+                   placeholder="Nome do proprietário"
+                   required>
           </div>
 
           <div class="col-md-6">
-            <label class="form-label">CPF *</label>
-            <input class="form-control" name="locadorCpf"
-              [(ngModel)]="dados.locadorCpf" required>
+            <label class="form-label">CPF ou CNPJ</label>
+            <input class="form-control"
+                   name="locadorDocumento"
+                   [(ngModel)]="dados.locadorDocumento"
+                   maxlength="30"
+                   placeholder="Documento do locador">
           </div>
 
           <div class="col-12">
-            <label class="form-label">Endereço completo *</label>
-            <input class="form-control" name="locadorEndereco"
-              [(ngModel)]="dados.locadorEndereco" required>
+            <label class="form-label">Endereço completo</label>
+            <textarea class="form-control"
+                      name="locadorEndereco"
+                      [(ngModel)]="dados.locadorEndereco"
+                      rows="2"
+                      placeholder="Rua, número, complemento, bairro, cidade e estado">
+            </textarea>
           </div>
+
+        </div>
+
+        <small class="text-secondary d-block mt-2">
+          Essas informações serão utilizadas para identificar o locador no contrato.
+        </small>
+
+      </div>
+    </div>
+
+    <!-- INQUILINO E IMÓVEL -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+
+        <h5 class="mb-3">2. Vincular inquilino e imóvel</h5>
+
+        <div class="row g-3">
+
+          <div class="col-md-6">
+            <label class="form-label">Inquilino *</label>
+
+            <select class="form-select"
+                    name="inquilinoId"
+                    [(ngModel)]="dados.inquilinoId"
+                    required>
+              <option [ngValue]="null">Selecione um inquilino</option>
+
+              <option *ngFor="let inquilino of inquilinos"
+                      [ngValue]="inquilino.id">
+                {{ inquilino.nome }} — {{ inquilino.cpf }}
+              </option>
+            </select>
+
+            <small *ngIf="inquilinos.length === 0"
+                   class="text-danger">
+              Nenhum inquilino ativo cadastrado.
+            </small>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label">Imóvel *</label>
+
+            <select class="form-select"
+                    name="imovelId"
+                    [(ngModel)]="dados.imovelId"
+                    required>
+              <option [ngValue]="null">Selecione um imóvel</option>
+
+              <option *ngFor="let imovel of imoveis"
+                      [ngValue]="imovel.id">
+                {{ imovel.titulo }} — {{ imovel.cidade }}/{{ imovel.estado }}
+              </option>
+            </select>
+
+            <small *ngIf="imoveis.length === 0"
+                   class="text-danger">
+              Nenhum imóvel ativo cadastrado.
+            </small>
+          </div>
+
         </div>
       </div>
     </div>
 
+    <!-- DADOS DO CONTRATO -->
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-body p-4">
-        <h5 class="mb-3">2. Dados do inquilino</h5>
+
+        <h5 class="mb-3">3. Dados do contrato</h5>
 
         <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">Nome completo *</label>
-            <input class="form-control" name="inquilinoNome"
-              [(ngModel)]="dados.inquilinoNome" required>
-          </div>
 
           <div class="col-md-6">
-            <label class="form-label">CPF *</label>
-            <input class="form-control" name="inquilinoCpf"
-              [(ngModel)]="dados.inquilinoCpf" required>
-          </div>
-
-          <div class="col-12">
-            <label class="form-label">Endereço atual completo *</label>
-            <input class="form-control" name="inquilinoEndereco"
-              [(ngModel)]="dados.inquilinoEndereco" required>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="card border-0 shadow-sm mb-4">
-      <div class="card-body p-4">
-        <h5 class="mb-3">3. Dados do imóvel</h5>
-
-        <div class="row g-3">
-          <div class="col-12">
-            <label class="form-label">Endereço completo do imóvel *</label>
-            <input class="form-control" name="imovelEndereco"
-              [(ngModel)]="dados.imovelEndereco" required>
-          </div>
-
-          <div class="col-md-6">
-            <label class="form-label">Finalidade</label>
-            <select class="form-select" name="finalidade"
-              [(ngModel)]="dados.finalidade">
+            <label class="form-label">Finalidade *</label>
+            <select class="form-select"
+                    name="finalidade"
+                    [(ngModel)]="dados.finalidade"
+                    required>
               <option value="Residencial">Residencial</option>
               <option value="Comercial">Comercial</option>
             </select>
@@ -89,32 +156,49 @@
 
           <div class="col-md-6">
             <label class="form-label">Valor mensal do aluguel (R$) *</label>
-            <input class="form-control" type="number" min="0.01" step="0.01"
-              name="valorAluguel" [(ngModel)]="dados.valorAluguel" required>
+            <input class="form-control"
+                   type="number"
+                   min="0.01"
+                   step="0.01"
+                   name="valorAluguel"
+                   [(ngModel)]="dados.valorAluguel"
+                   required>
           </div>
 
           <div class="col-md-4">
             <label class="form-label">Dia do vencimento *</label>
-            <input class="form-control" type="number" min="1" max="31"
-              name="diaVencimento" [(ngModel)]="dados.diaVencimento" required>
+            <input class="form-control"
+                   type="number"
+                   min="1"
+                   max="31"
+                   name="diaVencimento"
+                   [(ngModel)]="dados.diaVencimento"
+                   required>
           </div>
 
           <div class="col-md-4">
             <label class="form-label">Início do contrato *</label>
-            <input class="form-control" type="date" name="dataInicio"
-              [(ngModel)]="dados.dataInicio" required>
+            <input class="form-control"
+                   type="date"
+                   name="dataInicio"
+                   [(ngModel)]="dados.dataInicio"
+                   required>
           </div>
 
           <div class="col-md-4">
-            <label class="form-label">Fim do contrato *</label>
-            <input class="form-control" type="date" name="dataFim"
-              [(ngModel)]="dados.dataFim" required>
+            <label class="form-label">Fim do contrato</label>
+            <input class="form-control"
+                   type="date"
+                   name="dataFim"
+                   [(ngModel)]="dados.dataFim">
+            <small class="text-secondary">Opcional.</small>
           </div>
 
           <div class="col-md-6">
             <label class="form-label">Índice de reajuste anual</label>
-            <select class="form-select" name="indiceReajuste"
-              [(ngModel)]="dados.indiceReajuste">
+            <select class="form-select"
+                    name="indiceReajuste"
+                    [(ngModel)]="dados.indiceReajuste">
               <option value="IPCA/IBGE">IPCA/IBGE</option>
               <option value="IGP-M">IGP-M</option>
               <option value="Outro índice legalmente aplicável">
@@ -125,75 +209,356 @@
 
           <div class="col-md-6">
             <label class="form-label">Valor da caução (R$)</label>
-            <input class="form-control" type="number" min="0" step="0.01"
-              name="valorCaucao" [(ngModel)]="dados.valorCaucao">
+            <input class="form-control"
+                   type="number"
+                   min="0"
+                   step="0.01"
+                   name="valorCaucao"
+                   [(ngModel)]="dados.valorCaucao">
           </div>
 
           <div class="col-12">
             <label class="form-label">Observações adicionais</label>
-            <textarea class="form-control" rows="3" name="observacoes"
-              [(ngModel)]="dados.observacoes"
-              placeholder="Informações adicionais para constar no documento"></textarea>
+            <textarea class="form-control"
+                      rows="3"
+                      name="observacoes"
+                      [(ngModel)]="dados.observacoes"
+                      placeholder="Informações adicionais para constar no contrato">
+            </textarea>
           </div>
+
         </div>
       </div>
     </div>
 
+    <!-- CLÁUSULAS -->
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body p-4">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-2">
+          <div>
+            <h5 class="mb-1">4. Cláusulas do contrato</h5>
+            <p class="text-secondary mb-0">
+              Personalize o conteúdo do contrato conforme a necessidade da locação.
+            </p>
+          </div>
+
+          <button type="button"
+                  class="btn btn-outline-primary"
+                  (click)="adicionarClausula()">
+            <i class="bi bi-plus-lg me-2"></i>
+            Adicionar cláusula
+          </button>
+        </div>
+
+        <div class="alert alert-info py-2 mt-3">
+          <i class="bi bi-info-circle me-2"></i>
+          As cláusulas ativas serão incluídas no PDF. Você pode editar o título e o
+          conteúdo, desativar cláusulas ou alterar a ordem de apresentação.
+        </div>
+
+        <div *ngIf="clausulas.length === 0"
+             class="text-center text-secondary py-4">
+          Nenhuma cláusula adicionada.
+        </div>
+
+        <div *ngFor="let clausula of clausulas; let i = index"
+             class="clausula-editor border rounded-3 p-3 mb-3">
+
+          <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+
+            <div class="d-flex align-items-center gap-2">
+              <span class="badge text-bg-primary">
+                {{ i + 1 }}
+              </span>
+
+              <strong>
+                {{ clausula.personalizada ? 'Cláusula personalizada' : 'Cláusula padrão' }}
+              </strong>
+
+              <span class="badge"
+                    [class.text-bg-success]="clausula.ativa"
+                    [class.text-bg-secondary]="!clausula.ativa">
+                {{ clausula.ativa ? 'Ativa' : 'Inativa' }}
+              </span>
+            </div>
+
+            <div class="d-flex flex-wrap gap-1">
+
+              <button type="button"
+                      class="btn btn-sm btn-outline-secondary"
+                      title="Mover para cima"
+                      (click)="moverClausula(i, -1)"
+                      [disabled]="i === 0">
+                <i class="bi bi-arrow-up"></i>
+              </button>
+
+              <button type="button"
+                      class="btn btn-sm btn-outline-secondary"
+                      title="Mover para baixo"
+                      (click)="moverClausula(i, 1)"
+                      [disabled]="i === clausulas.length - 1">
+                <i class="bi bi-arrow-down"></i>
+              </button>
+
+              <button type="button"
+                      class="btn btn-sm"
+                      [class.btn-outline-success]="!clausula.ativa"
+                      [class.btn-outline-warning]="clausula.ativa"
+                      (click)="clausula.ativa = !clausula.ativa">
+                <i class="bi"
+                   [class.bi-toggle-off]="!clausula.ativa"
+                   [class.bi-toggle-on]="clausula.ativa">
+                </i>
+                {{ clausula.ativa ? 'Desativar' : 'Ativar' }}
+              </button>
+
+              <button type="button"
+                      class="btn btn-sm btn-outline-danger"
+                      title="Remover cláusula"
+                      (click)="removerClausula(i)">
+                <i class="bi bi-trash"></i>
+              </button>
+
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Título da cláusula *</label>
+            <input class="form-control"
+                   [name]="'clausulaTitulo' + i"
+                   [(ngModel)]="clausula.titulo"
+                   maxlength="200"
+                   placeholder="Ex.: DO PAGAMENTO DO ALUGUEL"
+                   required>
+          </div>
+
+          <div>
+            <label class="form-label">Conteúdo da cláusula *</label>
+            <textarea class="form-control"
+                      [name]="'clausulaConteudo' + i"
+                      [(ngModel)]="clausula.conteudo"
+                      rows="4"
+                      placeholder="Digite o conteúdo da cláusula..."
+                      required>
+            </textarea>
+          </div>
+
+          <small class="text-secondary d-block mt-2">
+            A ordem e o estado desta cláusula serão considerados na geração do PDF.
+          </small>
+
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3">
+          <small class="text-secondary">
+            {{ clausulas.length }} cláusula(s) cadastrada(s)
+            · {{ clausulas.filter(c => c.ativa).length }} ativa(s)
+          </small>
+
+          <button type="button"
+                  class="btn btn-outline-primary btn-sm"
+                  (click)="adicionarClausula()">
+            <i class="bi bi-plus-lg me-1"></i>
+            Nova cláusula
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- AÇÕES -->
     <div class="d-flex flex-wrap gap-2 mb-5">
+
       <button class="btn btn-primary" type="submit">
         <i class="bi bi-file-earmark-pdf me-2"></i>
         Gerar PDF
       </button>
 
-      <button class="btn btn-outline-primary" type="button"
-        (click)="salvarRascunho()">
+      <button class="btn btn-outline-primary"
+              type="button"
+              (click)="salvarRascunho()"
+              [disabled]="salvando">
         <i class="bi bi-save me-2"></i>
         Salvar rascunho
       </button>
 
-      <button class="btn btn-success" type="button"
-        (click)="ativarContrato()">
+      <button class="btn btn-success"
+              type="button"
+              (click)="ativarContrato()"
+              [disabled]="salvando">
         <i class="bi bi-check-circle me-2"></i>
         Salvar como ativo
       </button>
+
+      <button *ngIf="contratoEditandoId"
+              class="btn btn-outline-secondary"
+              type="button"
+              (click)="cancelarEdicao()">
+        Cancelar edição
+      </button>
+
+      <span *ngIf="salvando" class="text-secondary align-self-center">
+        Salvando contrato...
+      </span>
+
     </div>
+
   </form>
 
+  <!-- LISTAGEM -->
   <div class="card border-0 shadow-sm">
     <div class="card-body p-4">
-      <h5 class="mb-3">Contratos cadastrados</h5>
 
-      <div *ngIf="contratos.length === 0" class="text-secondary">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">Contratos cadastrados</h5>
+
+        <span class="badge text-bg-light border">
+          {{ contratos.length }} contrato(s)
+        </span>
+      </div>
+
+      <div *ngIf="!carregando && contratos.length === 0"
+           class="text-secondary py-3">
         Nenhum contrato cadastrado ainda.
       </div>
 
       <div *ngFor="let contrato of contratos"
-        class="contrato-item d-flex justify-content-between align-items-start flex-wrap gap-3 py-3">
+           class="contrato-item d-flex justify-content-between align-items-start flex-wrap gap-3 py-3">
+
         <div>
           <strong>{{ contrato.inquilinoNome }}</strong>
-          <div class="text-secondary">{{ contrato.imovelEndereco }}</div>
+
+          <div class="text-secondary">
+            {{ contrato.imovelTitulo }}
+          </div>
+
           <div>
             {{ contrato.valorAluguel | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
             · Vencimento dia {{ contrato.diaVencimento }}
           </div>
+
           <small class="text-secondary">
-            {{ contrato.dataInicio | date:'dd/MM/yyyy' }} até
-            {{ contrato.dataFim | date:'dd/MM/yyyy' }}
+            {{ contrato.dataInicio | date:'dd/MM/yyyy' }}
+
+            <ng-container *ngIf="contrato.dataFim">
+              até {{ contrato.dataFim | date:'dd/MM/yyyy' }}
+            </ng-container>
+
+            <ng-container *ngIf="!contrato.dataFim">
+              · Prazo indeterminado
+            </ng-container>
           </small>
+
           <div class="mt-2">
             <span class="badge"
-              [class.text-bg-success]="contrato.status === 'ATIVO'"
-              [class.text-bg-secondary]="contrato.status === 'RASCUNHO'">
+                  [class.text-bg-success]="contrato.status === 'ATIVO'"
+                  [class.text-bg-secondary]="contrato.status === 'RASCUNHO'">
               {{ contrato.status }}
             </span>
           </div>
         </div>
 
-        <button type="button" class="btn btn-sm btn-outline-danger"
-          (click)="excluir(contrato.id)">
-          <i class="bi bi-trash me-1"></i> Excluir
-        </button>
+        <div class="d-flex gap-2">
+          <button type="button"
+                  class="btn btn-sm btn-outline-primary"
+                  (click)="editar(contrato)">
+            <i class="bi bi-pencil me-1"></i>
+            Editar
+          </button>
+
+          <button type="button"
+                  class="btn btn-sm btn-outline-danger"
+                  (click)="excluir(contrato)"
+                  [disabled]="excluindoId === contrato.id">
+            <i class="bi bi-trash me-1"></i>
+            {{ excluindoId === contrato.id ? 'Excluindo...' : 'Excluir' }}
+          </button>
+        </div>
+
       </div>
+
     </div>
+  </div>
+
+</div>
+
+<!-- MODAL PERSONALIZADO DE EXCLUSÃO -->
+<div class="custom-modal-backdrop"
+     *ngIf="mostrarModalExclusao && contratoSelecionado"
+     (click)="cancelarExclusao()">
+
+  <div class="custom-modal"
+       (click)="$event.stopPropagation()">
+
+    <div class="custom-modal-icon">
+      <i class="bi bi-exclamation-triangle"></i>
+    </div>
+
+    <h4>Excluir contrato?</h4>
+
+    <p class="custom-modal-description">
+      Tem certeza de que deseja excluir este contrato?
+      Essa ação não poderá ser desfeita.
+    </p>
+
+    <div class="custom-modal-property">
+
+      <div class="custom-modal-property-icon">
+        <i class="bi bi-file-earmark-text"></i>
+      </div>
+
+      <div class="custom-modal-property-info">
+
+        <strong>
+          {{ contratoSelecionado.inquilinoNome }}
+        </strong>
+
+        <span>
+          {{ contratoSelecionado.imovelTitulo }}
+        </span>
+
+        <small>
+          Aluguel:
+          {{ contratoSelecionado.valorAluguel | currency:'BRL':'symbol':'1.2-2':'pt-BR' }}
+        </small>
+
+        <small>
+          Vencimento: dia {{ contratoSelecionado.diaVencimento }}
+        </small>
+
+      </div>
+
+    </div>
+
+    <div class="custom-modal-warning">
+      <i class="bi bi-info-circle"></i>
+      <span>
+        Contratos com pagamentos vinculados podem não permitir exclusão.
+      </span>
+    </div>
+
+    <div class="custom-modal-actions">
+
+      <button type="button"
+              class="btn-modal-cancelar"
+              (click)="cancelarExclusao()"
+              [disabled]="excluindoId !== null">
+        Cancelar
+      </button>
+
+      <button type="button"
+              class="btn-modal-excluir"
+              (click)="confirmarExclusao()"
+              [disabled]="excluindoId !== null">
+
+        <i class="bi bi-trash me-1"></i>
+
+        {{ excluindoId !== null ? 'Excluindo...' : 'Sim, excluir' }}
+
+      </button>
+
+    </div>
+
   </div>
 </div>

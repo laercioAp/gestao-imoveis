@@ -1,55 +1,112 @@
-
 <div class="page-heading">
   <div>
     <h1>Inquilinos</h1>
     <p>Cadastre e consulte as pessoas que alugam seus imóveis.</p>
   </div>
 
-  <button class="btn btn-primary" (click)="mostrarFormulario = !mostrarFormulario">
-    <i class="bi bi-person-plus me-2"></i>Novo inquilino
+  <button
+    class="btn btn-primary"
+    type="button"
+    (click)="novoCadastro()">
+    <i class="bi bi-person-plus me-2"></i>
+    Novo inquilino
   </button>
 </div>
 
-<div *ngIf="mensagem" class="alert alert-info">{{ mensagem }}</div>
+<div *ngIf="mensagem" class="alert alert-success">
+  {{ mensagem }}
+</div>
+
+<div *ngIf="erro" class="alert alert-danger">
+  {{ erro }}
+</div>
 
 <section *ngIf="mostrarFormulario" class="card form-card mb-4">
   <div class="card-body">
-    <h2 class="section-title">Dados do inquilino</h2>
+
+    <h2 class="section-title">
+      {{ inquilinoEmEdicaoId ? 'Editar inquilino' : 'Dados do inquilino' }}
+    </h2>
 
     <form (ngSubmit)="salvar()" #form="ngForm">
+
       <div class="row g-3">
+
         <div class="col-12">
-          <label class="form-label">Nome completo</label>
-          <input class="form-control" name="nome" [(ngModel)]="novoInquilino.nome"
-            placeholder="Nome completo do inquilino" required>
+          <label class="form-label">Nome completo *</label>
+
+          <input
+            class="form-control"
+            name="nome"
+            [(ngModel)]="novoInquilino.nome"
+            placeholder="Nome completo do inquilino"
+            maxlength="150"
+            required>
         </div>
 
         <div class="col-12 col-md-6">
-          <label class="form-label">CPF (opcional)</label>
-          <input class="form-control" name="cpf" [(ngModel)]="novoInquilino.cpf"
-            placeholder="000.000.000-00">
+          <label class="form-label">CPF *</label>
+
+          <input
+            class="form-control"
+            name="cpf"
+            [(ngModel)]="novoInquilino.cpf"
+            placeholder="000.000.000-00"
+            maxlength="14"
+            required>
         </div>
 
         <div class="col-12 col-md-6">
-          <label class="form-label">Telefone (opcional)</label>
-          <input class="form-control" name="telefone" [(ngModel)]="novoInquilino.telefone"
-            placeholder="(11) 99999-9999">
+          <label class="form-label">Telefone *</label>
+
+          <input
+            class="form-control"
+            name="telefone"
+            [(ngModel)]="novoInquilino.telefone"
+            placeholder="(11) 99999-9999"
+            maxlength="20"
+            required>
         </div>
 
         <div class="col-12">
           <label class="form-label">E-mail (opcional)</label>
-          <input class="form-control" type="email" name="email"
-            [(ngModel)]="novoInquilino.email" placeholder="nome@exemplo.com">
+
+          <input
+            class="form-control"
+            type="email"
+            name="email"
+            [(ngModel)]="novoInquilino.email"
+            placeholder="nome@exemplo.com"
+            maxlength="150">
         </div>
+
       </div>
 
       <div class="d-flex gap-2 justify-content-end mt-4">
-        <button type="button" class="btn btn-light" (click)="mostrarFormulario = false">
+
+        <button
+          type="button"
+          class="btn btn-light"
+          (click)="cancelar()">
           Cancelar
         </button>
-        <button type="submit" class="btn btn-primary" [disabled]="form.invalid">
-          Salvar inquilino
+
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="form.invalid || salvando">
+
+          <span *ngIf="!salvando">
+            {{ inquilinoEmEdicaoId ? 'Atualizar inquilino' : 'Salvar inquilino' }}
+          </span>
+
+          <span *ngIf="salvando">
+            <span class="spinner-border spinner-border-sm me-2"></span>
+            Salvando...
+          </span>
+
         </button>
+
       </div>
     </form>
   </div>
@@ -57,30 +114,163 @@
 
 <section class="card list-card">
   <div class="card-body">
-    <h2 class="section-title">Inquilinos cadastrados ({{ inquilinos.length }})</h2>
 
-    <div *ngIf="inquilinos.length === 0" class="empty-state">
+    <h2 class="section-title">
+      Inquilinos cadastrados ({{ inquilinos.length }})
+    </h2>
+
+    <div *ngIf="carregando" class="text-center py-4">
+      <span class="spinner-border spinner-border-sm me-2"></span>
+      Carregando inquilinos...
+    </div>
+
+    <div
+      *ngIf="!carregando && inquilinos.length === 0"
+      class="empty-state">
+
       <i class="bi bi-people"></i>
+
       <p>Nenhum inquilino cadastrado ainda.</p>
+
       <span>Selecione “Novo inquilino” para começar.</span>
     </div>
 
-    <div *ngFor="let inquilino of inquilinos" class="tenant-row">
-      <div class="tenant-icon"><i class="bi bi-person"></i></div>
+    <div
+      *ngFor="let inquilino of inquilinos"
+      class="tenant-row">
+
+      <div class="tenant-icon">
+        <i class="bi bi-person"></i>
+      </div>
 
       <div class="tenant-info">
+
         <strong>{{ inquilino.nome }}</strong>
-        <span *ngIf="inquilino.cpf">CPF: {{ inquilino.cpf }}</span>
-        <span *ngIf="inquilino.telefone">
-          <i class="bi bi-telephone me-1"></i>{{ inquilino.telefone }}
+
+        <span *ngIf="inquilino.cpf">
+          CPF: {{ inquilino.cpf }}
         </span>
+
+        <span *ngIf="inquilino.telefone">
+          <i class="bi bi-telephone me-1"></i>
+          {{ inquilino.telefone }}
+        </span>
+
         <span *ngIf="inquilino.email">
-          <i class="bi bi-envelope me-1"></i>{{ inquilino.email }}
+          <i class="bi bi-envelope me-1"></i>
+          {{ inquilino.email }}
+        </span>
+
+      </div>
+
+      <div class="d-flex gap-2">
+
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-primary"
+          (click)="editar(inquilino)">
+          <i class="bi bi-pencil"></i>
+          Editar
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-danger"
+          [disabled]="excluindoId === inquilino.id"
+          (click)="excluir(inquilino)">
+
+          <span *ngIf="excluindoId !== inquilino.id">
+            <i class="bi bi-trash"></i>
+            Excluir
+          </span>
+
+          <span *ngIf="excluindoId === inquilino.id">
+            Excluindo...
+          </span>
+
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- MODAL PERSONALIZADO DE EXCLUSÃO -->
+<div
+  *ngIf="mostrarModalExclusao && inquilinoSelecionado"
+  class="custom-modal-backdrop">
+
+  <div
+    class="custom-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="tituloModalExclusao">
+
+    <div class="custom-modal-icon">
+      <i class="bi bi-exclamation-triangle"></i>
+    </div>
+
+    <h2 id="tituloModalExclusao">
+      Excluir inquilino?
+    </h2>
+
+    <p class="custom-modal-description">
+      Você está prestes a excluir este inquilino do sistema.
+    </p>
+
+    <div class="custom-modal-property">
+
+      <i class="bi bi-person"></i>
+
+      <div>
+        <strong>{{ inquilinoSelecionado.nome }}</strong>
+
+        <span>
+          CPF: {{ inquilinoSelecionado.cpf || 'Não informado' }}
+        </span>
+
+        <span *ngIf="inquilinoSelecionado.telefone">
+          {{ inquilinoSelecionado.telefone }}
         </span>
       </div>
 
-      <button type="button" class="btn btn-sm btn-outline-danger"
-        (click)="excluir(inquilino.id)">Excluir</button>
     </div>
+
+    <div class="custom-modal-warning">
+      <i class="bi bi-info-circle"></i>
+      Esta ação não poderá ser desfeita.
+    </div>
+
+    <div class="custom-modal-actions">
+
+      <button
+        type="button"
+        class="btn-modal-cancel"
+        [disabled]="excluindoId !== null"
+        (click)="cancelarExclusao()">
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="btn-modal-delete"
+        [disabled]="excluindoId !== null"
+        (click)="confirmarExclusao()">
+
+        <span *ngIf="excluindoId === null">
+          <i class="bi bi-trash me-1"></i>
+          Excluir inquilino
+        </span>
+
+        <span *ngIf="excluindoId !== null">
+          <span class="spinner-border spinner-border-sm me-2"></span>
+          Excluindo...
+        </span>
+
+      </button>
+
+    </div>
+
   </div>
-</section>
+</div>
