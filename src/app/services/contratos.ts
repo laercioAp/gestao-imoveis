@@ -1,5 +1,11 @@
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { Observable, map } from 'rxjs';
+import {
+  ContratosApiService,
+  Contrato,
+  ContratoRequest
+} from './contratos-api.service';
 
 export type StatusContrato = 'RASCUNHO' | 'ATIVO';
 
@@ -24,41 +30,36 @@ export interface ContratoLocacao {
   criadoEm: string;
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable({
+  providedIn: 'root'
+})
 export class ContratosService {
-  private readonly chave = 'gestao-contratos-v1';
+  private readonly contratosApi = inject(ContratosApiService);
 
-  listar(): ContratoLocacao[] {
-    try {
-      return JSON.parse(
-        localStorage.getItem(this.chave) || '[]'
-      ) as ContratoLocacao[];
-    } catch {
-      return [];
-    }
+  listar(): Observable<Contrato[]> {
+    return this.contratosApi.listar();
   }
 
-  salvarContrato(
-    dados: Omit<ContratoLocacao, 'id' | 'criadoEm'>
-  ): ContratoLocacao {
-    const contratos = this.listar();
-
-    const contrato: ContratoLocacao = {
-      ...dados,
-      id: contratos.length
-        ? Math.max(...contratos.map(c => c.id)) + 1
-        : 1,
-      criadoEm: new Date().toISOString()
-    };
-
-    contratos.push(contrato);
-    localStorage.setItem(this.chave, JSON.stringify(contratos));
-
-    return contrato;
+  buscarPorId(id: number): Observable<Contrato> {
+    return this.contratosApi.buscarPorId(id);
   }
 
-  excluir(id: number): void {
-    const contratos = this.listar().filter(c => c.id !== id);
-    localStorage.setItem(this.chave, JSON.stringify(contratos));
+  listarPorStatus(status: StatusContrato): Observable<Contrato[]> {
+    return this.contratosApi.listarPorStatus(status);
+  }
+
+  salvarContrato(dados: ContratoRequest): Observable<Contrato> {
+    return this.contratosApi.cadastrar(dados);
+  }
+
+  atualizarContrato(
+    id: number,
+    dados: ContratoRequest
+  ): Observable<Contrato> {
+    return this.contratosApi.atualizar(id, dados);
+  }
+
+  excluir(id: number): Observable<void> {
+    return this.contratosApi.excluir(id);
   }
 }
