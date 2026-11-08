@@ -4,68 +4,60 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-export interface Inquilino {
+export interface Imovel {
   id: number;
-  nome: string;
-  cpf: string;
-  telefone: string;
-  email: string | null;
-  endereco?: string | null;
-  numero?: string | null;
-  complemento?: string | null;
-  bairro?: string | null;
-  cidade?: string | null;
-  estado?: string | null;
-  cep?: string | null;
+  titulo: string;
+  tipo: string;
+  descricao: string | null;
+  endereco: string;
+  numero: string | null;
+  complemento: string | null;
+  bairro: string | null;
+  cidade: string;
+  estado: string;
+  cep: string | null;
+  valorAluguel: number;
   ativo: boolean;
   criadoEm?: string | null;
   atualizadoEm?: string | null;
 }
 
-export interface InquilinoRequest {
-  nome: string;
-  cpf: string;
-  telefone: string;
-  email: string | null;
-  endereco: string | null;
+export interface ImovelRequest {
+  titulo: string;
+  tipo: string;
+  descricao: string | null;
+  endereco: string;
   numero: string | null;
   complemento: string | null;
   bairro: string | null;
-  cidade: string | null;
-  estado: string | null;
+  cidade: string;
+  estado: string;
   cep: string | null;
+  valorAluguel: number;
   ativo: boolean;
 }
 
 @Injectable({
   providedIn: 'root'
 })
-export class InquilinosApiService {
-
+export class ImoveisApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = `${environment.apiUrl}/inquilinos`;
+  private readonly apiUrl = `${environment.apiUrl}/imoveis`;
 
-  listar(): Observable<Inquilino[]> {
-    return this.http.get<Inquilino[]>(this.apiUrl);
+  listar(): Observable<Imovel[]> {
+    return this.http.get<Imovel[]>(this.apiUrl);
   }
 
-  listarAtivos(): Observable<Inquilino[]> {
-    return this.http.get<Inquilino[]>(`${this.apiUrl}/ativos`);
+  buscarPorId(id: number): Observable<Imovel> {
+    return this.http.get<Imovel>(`${this.apiUrl}/${id}`);
   }
 
-  buscarPorId(id: number): Observable<Inquilino> {
-    return this.http.get<Inquilino>(`${this.apiUrl}/${id}`);
+  cadastrar(dados: ImovelRequest): Observable<Imovel> {
+    return this.http.post<Imovel>(this.apiUrl, dados);
   }
 
-  cadastrar(dados: InquilinoRequest): Observable<Inquilino> {
-    return this.http.post<Inquilino>(this.apiUrl, dados);
-  }
-
-  atualizar(
-    id: number,
-    dados: InquilinoRequest
-  ): Observable<Inquilino> {
-    return this.http.put<Inquilino>(`${this.apiUrl}/${id}`, dados);
+  atualizar(id: number, dados: ImovelRequest): Observable<Imovel> {
+    return this.http.put<Imovel>(`${this.apiUrl}/${id}`, dados);
   }
 
   excluir(id: number): Observable<void> {
