@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment.prod';
 
 export interface Imovel {
   id: number;
@@ -41,7 +42,7 @@ export interface ImovelRequest {
 })
 export class ImoveisApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/imoveis';
+  private readonly apiUrl = environment.apiUrl;
 
   listar(): Observable<Imovel[]> {
     return this.http.get<Imovel[]>(this.apiUrl);
