@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment.prod';
 
 export interface Inquilino {
   id: number;
@@ -42,7 +43,7 @@ export interface InquilinoRequest {
 export class InquilinosApiService {
 
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/inquilinos';
+  private readonly apiUrl = environment.apiUrl;
 
   listar(): Observable<Inquilino[]> {
     return this.http.get<Inquilino[]>(this.apiUrl);

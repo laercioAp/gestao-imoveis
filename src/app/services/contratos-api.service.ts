@@ -2,6 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment.prod';
 
 export interface ContratoClausula {
   id?: number | null;
@@ -82,7 +83,7 @@ export interface ContratoClausulaRequest {
 })
 export class ContratosApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/contratos';
+  private readonly apiUrl = environment.apiUrl;
 
   listar(): Observable<Contrato[]> {
     return this.http.get<Contrato[]>(this.apiUrl);
