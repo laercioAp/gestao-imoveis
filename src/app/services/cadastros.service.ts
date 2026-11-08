@@ -1,5 +1,8 @@
 
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Imovel {
   id: number;
@@ -24,61 +27,58 @@ export interface Inquilino {
   providedIn: 'root'
 })
 export class CadastrosService {
-  private readonly chaveImoveis = 'gestao-imoveis-v1';
-  private readonly chaveInquilinos = 'gestao-inquilinos-v1';
+  private readonly http = inject(HttpClient);
 
-  listarImoveis(): Imovel[] {
-    return this.ler<Imovel>(this.chaveImoveis);
+  private readonly apiUrl = environment.apiUrl;
+
+  // ================================
+  // IMÓVEIS
+  // ================================
+
+  listarImoveis(): Observable<Imovel[]> {
+    return this.http.get<Imovel[]>(`${this.apiUrl}/imoveis`);
   }
 
-  listarInquilinos(): Inquilino[] {
-    return this.ler<Inquilino>(this.chaveInquilinos);
+  buscarImovelPorId(id: number): Observable<Imovel> {
+    return this.http.get<Imovel>(`${this.apiUrl}/imoveis/${id}`);
   }
 
-  adicionarImovel(dados: Omit<Imovel, 'id'>): void {
-    const imoveis = this.listarImoveis();
-    const id = imoveis.length
-      ? Math.max(...imoveis.map(item => item.id)) + 1
-      : 1;
-
-    imoveis.push({ ...dados, id });
-    this.salvar(this.chaveImoveis, imoveis);
+  adicionarImovel(dados: Omit<Imovel, 'id'>): Observable<Imovel> {
+    return this.http.post<Imovel>(`${this.apiUrl}/imoveis`, dados);
   }
 
-  excluirImovel(id: number): void {
-    const imoveis = this.listarImoveis()
-      .filter(imovel => imovel.id !== id);
-
-    this.salvar(this.chaveImoveis, imoveis);
+  atualizarImovel(id: number, dados: Omit<Imovel, 'id'>): Observable<Imovel> {
+    return this.http.put<Imovel>(`${this.apiUrl}/imoveis/${id}`, dados);
   }
 
-  adicionarInquilino(dados: Omit<Inquilino, 'id'>): void {
-    const inquilinos = this.listarInquilinos();
-    const id = inquilinos.length
-      ? Math.max(...inquilinos.map(item => item.id)) + 1
-      : 1;
-
-    inquilinos.push({ ...dados, id });
-    this.salvar(this.chaveInquilinos, inquilinos);
+  excluirImovel(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/imoveis/${id}`);
   }
 
-  excluirInquilino(id: number): void {
-    const inquilinos = this.listarInquilinos()
-      .filter(inquilino => inquilino.id !== id);
+  // ================================
+  // INQUILINOS
+  // ================================
 
-    this.salvar(this.chaveInquilinos, inquilinos);
+  listarInquilinos(): Observable<Inquilino[]> {
+    return this.http.get<Inquilino[]>(`${this.apiUrl}/inquilinos`);
   }
 
-  private ler<T>(chave: string): T[] {
-    try {
-      const dados = localStorage.getItem(chave);
-      return dados ? JSON.parse(dados) as T[] : [];
-    } catch {
-      return [];
-    }
+  buscarInquilinoPorId(id: number): Observable<Inquilino> {
+    return this.http.get<Inquilino>(`${this.apiUrl}/inquilinos/${id}`);
   }
 
-  private salvar<T>(chave: string, dados: T[]): void {
-    localStorage.setItem(chave, JSON.stringify(dados));
+  adicionarInquilino(dados: Omit<Inquilino, 'id'>): Observable<Inquilino> {
+    return this.http.post<Inquilino>(`${this.apiUrl}/inquilinos`, dados);
+  }
+
+  atualizarInquilino(
+    id: number,
+    dados: Omit<Inquilino, 'id'>
+  ): Observable<Inquilino> {
+    return this.http.put<Inquilino>(`${this.apiUrl}/inquilinos/${id}`, dados);
+  }
+
+  excluirInquilino(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/inquilinos/${id}`);
   }
 }

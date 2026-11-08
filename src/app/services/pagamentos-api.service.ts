@@ -2,7 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 export interface Pagamento {
   id: number;
@@ -50,7 +50,7 @@ export interface GerarMensalidadeResponse {
 })
 export class PagamentosApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = environment.apiUrl;
+  private readonly apiUrl = `${environment.apiUrl}/pagamentos`;
 
   listar(): Observable<Pagamento[]> {
     return this.http.get<Pagamento[]>(this.apiUrl);

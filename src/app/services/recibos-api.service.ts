@@ -1,7 +1,8 @@
+
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 export interface ReciboResponse {
     id: number;
@@ -15,7 +16,7 @@ export interface ReciboResponse {
 })
 export class RecibosApiService {
     private readonly http = inject(HttpClient);
-    private readonly apiUrl = environment.apiUrl;
+    private readonly apiUrl = `${environment.apiUrl}/recibos`;
 
     emitir(pagamentoId: number): Observable<ReciboResponse> {
         return this.http.post<ReciboResponse>(

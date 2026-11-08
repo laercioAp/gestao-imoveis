@@ -2,7 +2,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment.prod';
+import { environment } from '../../environments/environment';
 
 export interface ContratoClausula {
   id?: number | null;
@@ -46,6 +46,14 @@ export interface Contrato {
   clausulas: ContratoClausula[];
 }
 
+export interface ContratoClausulaRequest {
+  ordem: number;
+  titulo: string;
+  conteudo: string;
+  ativa: boolean;
+  personalizada: boolean;
+}
+
 export interface ContratoRequest {
   imovelId: number;
   inquilinoId: number;
@@ -65,17 +73,9 @@ export interface ContratoRequest {
   locadorDocumento: string | null;
   locadorEndereco: string | null;
 
-  status: 'RASCUNHO' | 'ATIVO' | 'ENCERRADO';
+  status: Contrato['status'];
 
   clausulas: ContratoClausulaRequest[];
-}
-
-export interface ContratoClausulaRequest {
-  ordem: number;
-  titulo: string;
-  conteudo: string;
-  ativa: boolean;
-  personalizada: boolean;
 }
 
 @Injectable({
@@ -83,7 +83,8 @@ export interface ContratoClausulaRequest {
 })
 export class ContratosApiService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = environment.apiUrl;
+
+  private readonly apiUrl = `${environment.apiUrl}/contratos`;
 
   listar(): Observable<Contrato[]> {
     return this.http.get<Contrato[]>(this.apiUrl);
@@ -93,16 +94,22 @@ export class ContratosApiService {
     return this.http.get<Contrato>(`${this.apiUrl}/${id}`);
   }
 
-  listarPorStatus(status: string): Observable<Contrato[]> {
-    return this.http.get<Contrato[]>(`${this.apiUrl}/status/${status}`);
+  listarPorStatus(status: Contrato['status']): Observable<Contrato[]> {
+    return this.http.get<Contrato[]>(
+      `${this.apiUrl}/status/${status}`
+    );
   }
 
   listarPorImovel(imovelId: number): Observable<Contrato[]> {
-    return this.http.get<Contrato[]>(`${this.apiUrl}/imovel/${imovelId}`);
+    return this.http.get<Contrato[]>(
+      `${this.apiUrl}/imovel/${imovelId}`
+    );
   }
 
   listarPorInquilino(inquilinoId: number): Observable<Contrato[]> {
-    return this.http.get<Contrato[]>(`${this.apiUrl}/inquilino/${inquilinoId}`);
+    return this.http.get<Contrato[]>(
+      `${this.apiUrl}/inquilino/${inquilinoId}`
+    );
   }
 
   cadastrar(dados: ContratoRequest): Observable<Contrato> {
@@ -110,7 +117,10 @@ export class ContratosApiService {
   }
 
   atualizar(id: number, dados: ContratoRequest): Observable<Contrato> {
-    return this.http.put<Contrato>(`${this.apiUrl}/${id}`, dados);
+    return this.http.put<Contrato>(
+      `${this.apiUrl}/${id}`,
+      dados
+    );
   }
 
   excluir(id: number): Observable<void> {
